@@ -1,15 +1,18 @@
+from typing import Text
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QThread,pyqtSignal
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from polektor import Ui_Form
+from validation import Ui_Dialog
 import serial, serial.tools.list_ports
 import time,os,csv
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import scipy.signal
+import string,random
 
 class gui (QtWidgets.QDialog, Ui_Form):
     def __init__(self):
@@ -22,11 +25,36 @@ class gui (QtWidgets.QDialog, Ui_Form):
         self.mlx90614 = []
         
         #EVENT HANDLE
-        self.btn_refresh.clicked.connect(self.refresh_serial)
+        self.btn_refresh.clicked.connect(self.refresh)
         self.btn_measure.clicked.connect(self.measure)
-        #self.btn_connect.clicked.connect(self.connect)
+        self.btn_generate.clicked.connect(self.generate)
+        self.btn_validation.clicked.connect(self.validation)
+
+    def validation(self):
+        current_date = self.lbl_time.text()
+        nik = self.in_nik.text()
+        nama = self.in_nama.text()
+        kelamin = self.cb_kelamin.currentText()
+        umur = self.in_umur.text()
+        suhu = self.lbl_suhu.text()
+        bpm = self.lbl_bpm.text()
+        spo2 = self.lbl_spo2.text()
+        tensi = self.lbl_tensi.text()
+        kategori = self.lbl_kategori.text()
+        berlaku = self.cb_masaberlaku.currentText()[:1]
+
         
-    def refresh_serial(self):
+
+
+        
+        
+        
+    def generate(self):
+        def pw_generator(size=6, chars=string.ascii_uppercase + string.digits):
+            return ''.join(random.choice(chars) for _ in range(size))
+        self.lbl_pw.setText(str(pw_generator()))
+
+    def refresh(self):
         self.cb_serial.clear()
         self.cb_serial.addItem("None")
         portData = serial.tools.list_ports.comports()
@@ -111,6 +139,35 @@ class gui (QtWidgets.QDialog, Ui_Form):
             for t,x,y in zip(t_vec,ir_vec,red_vec):
                 writer.writerow([t,x,y])
 
+    def calculate_suhu(self):
+        datafile_name = 'mlx90614_data.csv'
+        if os.path.isfile(datafile_name):
+            os.remove(datafile_name)
+
+        #preprocessing data
+        t_vec,suhu_vec = [],[]
+        suhu_prev = 0.0
+        for ii in range(3,len(self.mlx90614)):
+            try:
+                curr_data = (self.mlx90614[ii][0:-2]).decode("utf-8").split(',')
+            except:
+                continue
+            if len(curr_data)==2:
+                if abs((float(curr_data[1])-suhu_prev)/float(curr_data[1]))>1.01:
+                    continue
+                t_vec.append(float(curr_data[0])/1000000.0)
+                suhu_vec.append(float(curr_data[1]))
+                suhu_prev = float(curr_data[1])
+
+        #AVERAGE
+        self.lbl_suhu.setText(": " + str(np.mean(suhu_vec))[:5] + " Celcius")
+
+        ## saving data
+        with open(datafile_name,'a') as f:
+            writer = csv.writer(f,delimiter=',')
+            for t,x in zip(t_vec,suhu_vec):
+                writer.writerow([t,x])
+
     def measure(self):
         port = str(self.cb_serial.currentText())
         if port == "None":
@@ -118,7 +175,6 @@ class gui (QtWidgets.QDialog, Ui_Form):
         else:
             print("BEGIN MEASURING OXIMETER") #TAMPILKAN SHOW MESSAGE
             ser = serial.Serial(port,baudrate=115200)
-
             self.start_word = False
             self.max30105 = []
             self.mpx90614 = []
@@ -135,30 +191,22 @@ class gui (QtWidgets.QDialog, Ui_Form):
                         continue
                     else :
                         continue
-                
                 if curr_line[0:-2]==b'END':
                     self.start_word = False 
-
                 if curr_line[0:-2]==b'ENDMEASURE':
                     break
-
                 if self.start_word == "MAX30102":
                     self.max30105.append(curr_line)
                 if self.start_word == "MLX90614":
                     self.mlx90614.append(curr_line)
-
-
             self.calculate_oximeter()
+            self.calculate_suhu()
             
-
-            
-
-
 if __name__=='__main__':
     import sys
     app = QtWidgets.QApplication(sys.argv)
     app.setStyle('Windows')
     window = gui()
-    window.setWindowTitle('Test Open GL')
+    window.setWindowTitle('POLECTOR - Poltekad Covid19 Detector')
     window.show()
     sys.exit(app.exec_())
