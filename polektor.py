@@ -13,7 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(400, 300)
+        Form.resize(401, 101)
         self.lbl_tensi = QtWidgets.QLabel(Form)
         self.lbl_tensi.setGeometry(QtCore.QRect(10, 10, 121, 17))
         self.lbl_tensi.setObjectName("lbl_tensi")
@@ -27,16 +27,13 @@ class Ui_Form(object):
         self.lbl_spo2.setGeometry(QtCore.QRect(10, 70, 121, 17))
         self.lbl_spo2.setObjectName("lbl_spo2")
         self.btn_measure = QtWidgets.QPushButton(Form)
-        self.btn_measure.setGeometry(QtCore.QRect(110, 10, 89, 25))
+        self.btn_measure.setGeometry(QtCore.QRect(300, 40, 89, 25))
         self.btn_measure.setObjectName("btn_measure")
         self.btn_refresh = QtWidgets.QPushButton(Form)
-        self.btn_refresh.setGeometry(QtCore.QRect(110, 40, 89, 25))
+        self.btn_refresh.setGeometry(QtCore.QRect(210, 40, 89, 25))
         self.btn_refresh.setObjectName("btn_refresh")
-        self.btn_connect = QtWidgets.QPushButton(Form)
-        self.btn_connect.setGeometry(QtCore.QRect(110, 70, 89, 25))
-        self.btn_connect.setObjectName("btn_connect")
         self.cb_serial = QtWidgets.QComboBox(Form)
-        self.cb_serial.setGeometry(QtCore.QRect(210, 10, 171, 25))
+        self.cb_serial.setGeometry(QtCore.QRect(210, 10, 181, 25))
         self.cb_serial.setObjectName("cb_serial")
         self.cb_serial.addItem("")
 
@@ -52,7 +49,6 @@ class Ui_Form(object):
         self.lbl_spo2.setText(_translate("Form", ": 0 %"))
         self.btn_measure.setText(_translate("Form", "Measure"))
         self.btn_refresh.setText(_translate("Form", "Refresh"))
-        self.btn_connect.setText(_translate("Form", "Connect"))
         self.cb_serial.setItemText(0, _translate("Form", "None"))
 
 

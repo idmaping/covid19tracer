@@ -9,6 +9,7 @@ import time,os,csv
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
+import scipy.signal
 
 class gui (QtWidgets.QDialog, Ui_Form):
     def __init__(self):
@@ -36,12 +37,35 @@ class gui (QtWidgets.QDialog, Ui_Form):
                 splitPort=strPort.split(' ')
                 self.cb_serial.addItem(splitPort[0])
 
+    def find_spo2(self,t_vec,red_vec, ir_vec, sample):
+        frate = 0.95
+        avered = 0
+        aveir = 0
+        sumredrms = 0
+        sumirrms = 0
+        R=0
+        buff_spo2,buff_ratio=[],[]
+        for i in range(len(t_vec)):
+            avered = avered * frate + red_vec[i] * (1.0 - frate)
+            sumredrms += (red_vec[i] - avered) * (red_vec[i] - avered)        
+            aveir = aveir * frate + ir_vec[i] * (1.0 - frate)
+            sumirrms += (ir_vec[i] - aveir) * (ir_vec[i] - aveir)
+
+            if i%sample == 0:
+                R = (np.sqrt(sumredrms) / avered) / (np.sqrt(sumirrms) / aveir)
+                SpO2 = -23.3 * (R - 0.4) + 100
+                sumredrms = 0
+                sumirrms = 0
+                buff_spo2.append(SpO2)
+            buff_ratio.append(R)
+            
+        return buff_ratio,buff_spo2
+
     def calculate_oximeter(self):
         datafile_name = 'max30102_data.csv'
         if os.path.isfile(datafile_name):
             os.remove(datafile_name)
         
-        '''
         #preprocessing data
         t_vec,ir_vec,red_vec = [],[],[]
         ir_prev,red_prev = 0.0,0.0
@@ -59,35 +83,33 @@ class gui (QtWidgets.QDialog, Ui_Form):
                 red_vec.append(float(curr_data[2]))
                 ir_prev = float(curr_data[1])
                 red_prev = float(curr_data[2])
-        print('Sample Rate: {0:2.1f}Hz'.format(1.0/np.mean(np.abs(np.diff(t_vec)))))
+        #print('Sample Rate: {0:2.1f}Hz'.format(1.0/np.mean(np.abs(np.diff(t_vec)))))
+
+        
+        ## calculate heartrate
+        smoothing_size = 20 # convolution smoothing size
+        samp_rate = 1/np.mean(np.diff(t_vec)) # average sample rate for determining peaks
+        y_vals = ir_vec
+        y_vals = np.convolve(y_vals,np.ones((smoothing_size,)),'same')/smoothing_size
+        y_vals = np.append(np.repeat(y_vals[int(smoothing_size/2)],int(smoothing_size/2)),y_vals[int(smoothing_size/2):-int(smoothing_size/2)])
+        y_vals = np.append(y_vals,np.repeat(y_vals[-int(smoothing_size/2)],int(smoothing_size/2)))
+        indexes, _ = scipy.signal.find_peaks(y_vals, distance=samp_rate*.5)
+        scatter_x,scatter_y = [],[]
+        for jj in indexes:
+            scatter_x.append(t_vec[jj])
+            scatter_y.append(y_vals[jj])
+        bpm = 60/np.mean(np.diff(scatter_x))
+        self.lbl_bpm.setText(": " + str(bpm)[:5] + " BPM")
+        
+        ## calculate SPo2
+        ratio_vec,spo2_vec = self.find_spo2(t_vec=t_vec,red_vec=red_vec, ir_vec=ir_vec, sample=int(np.mean(np.diff(indexes))))
+        self.lbl_spo2.setText(": " + str(np.mean(spo2_vec))[:5] + " %")
 
         ## saving data
         with open(datafile_name,'a') as f:
             writer = csv.writer(f,delimiter=',')
             for t,x,y in zip(t_vec,ir_vec,red_vec):
                 writer.writerow([t,x,y])
-
-        ## plotting data vectors 
-        fig = plt.figure(figsize=(12,8))
-        ax1 = fig.add_subplot(111)
-        ax1.set_xlabel('Time [s]',fontsize=24)
-        ax1.set_ylabel('IR Amplitude',fontsize=24,color='#CE445D',labelpad=10)
-        ax1.tick_params(axis='both',which='major',labelsize=16)
-        plt1 = ax1.plot(t_vec,ir_vec,label='IR',color='#CE445D',linewidth=4)
-        ax1_2 = plt.twinx()
-        ax1_2.grid('off')
-        ax1_2.set_ylabel('Red Amplitude',fontsize=24,color='#37A490',labelpad=10)
-        ax1_2.tick_params(axis='y',which='major',labelsize=16)
-        plt2 = ax1_2.plot(t_vec,red_vec,label='Red',color='#37A490',linewidth=4)
-        lns = plt1+plt2
-        labels = [l.get_label() for l in lns]
-        ax1_2.legend(lns,labels,fontsize=16)
-        plt.xlim([t_vec[0],t_vec[-1]])
-        plt.tight_layout(pad=1.2)
-        plt.savefig('max30102_example.png',dpi=300,facecolor=[252/255,252/255,252/255])
-        plt.show()
-        '''
-
 
     def measure(self):
         port = str(self.cb_serial.currentText())
@@ -101,10 +123,7 @@ class gui (QtWidgets.QDialog, Ui_Form):
             self.max30105 = []
             self.mpx90614 = []
             while True:
-                #try :
-                curr_line = ser.readline() # read line
-                #print(curr_line[0:-2],self.start_word)
-
+                curr_line = ser.readline()
                 if self.start_word == False:
 
                     if curr_line[0:-2]==b'MAX30102':
@@ -128,13 +147,7 @@ class gui (QtWidgets.QDialog, Ui_Form):
                 if self.start_word == "MLX90614":
                     self.mlx90614.append(curr_line)
 
-                #except KeyboardInterrupt:
-                #    break
-            #print("================================================")
-            #print("MAX30105")
-            #print(self.max30105)
-            #print("MLX90614")
-            #print(self.mlx90614)
+
             self.calculate_oximeter()
             
 

@@ -5,10 +5,9 @@
 
 #include <Wire.h>
 #include <Adafruit_MLX90614.h>
-#include <Wire.h>
+
 #include "MAX30105.h" //sparkfun MAX3010X library
 MAX30105 particleSensor;
-
 #define USEFIFO
 
 bool logicLed = LOW;
@@ -98,24 +97,26 @@ void kirimOximeter(long waktuKirim) {
   particleSensor.setup(ledBrightness, sampleAverage, ledMode, sampleRate, pulseWidth, adcRange); //Configure sensor with these settings
   particleSensor.enableDIETEMPRDY();
   //MAX30102===================================================================================
-
   
   Serial.println("");
   Serial.println("MAX30102");
   delay(100);
-
+  long i = 0;
+  while (1) {
 #ifdef USEFIFO
-  particleSensor.check(); //Check the sensor, read up to 3 samples
-  for (long i = 0; i <= waktuKirim; i++) {
-    Serial.print(micros());
-    Serial.print(",");
-    Serial.print(particleSensor.getFIFORed());
-    Serial.print(",");
-    Serial.println(particleSensor.getFIFOIR());
-    particleSensor.nextSample();
-    logicLed = !logicLed;
-  }
+    particleSensor.check(); //Check the sensor, read up to 3 samples
+    if (particleSensor.available()) {
+      Serial.print(micros());
+      Serial.print(",");
+      Serial.print(particleSensor.getFIFORed());
+      Serial.print(",");
+      Serial.println(particleSensor.getFIFOIR());
+      particleSensor.nextSample();
+      i++;
+    }
+    if(i>=waktuKirim){break;}
 #endif
+  }
 }
 void kirimDummySuhu(long waktuKirim) {
   Serial.println("");
@@ -153,7 +154,7 @@ void kirimSuhu(long waktuKirim) {
 
 void setup() {
   Serial.begin(115200);
-  
+
   pinMode(AIRPUMP, OUTPUT);
   pinMode(VALVE, OUTPUT);
   pinMode(LED_R, OUTPUT);
@@ -161,15 +162,13 @@ void setup() {
 
   digitalWrite(LED_G, HIGH);
   digitalWrite(LED_R, LOW);
-  
-
 
   while (!Serial); //We must wait for Teensy to come online
   delay(100);
   digitalWrite(LED_G, LOW);
   beginMeasuring();
   //kirimDummyOximeter(1000);
-  kirimOximeter(5000);
+  kirimOximeter(2000);
   delay(100); Serial.println("END"); Serial.println(""); Serial.println("");
   //kirimDummySuhu(1000);
   kirimSuhu(50);
