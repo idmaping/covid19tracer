@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 import scipy.signal
 import string,random
+import fb_config as fb
 
 class gui (QtWidgets.QDialog, Ui_Form):
     def __init__(self):
@@ -42,13 +43,20 @@ class gui (QtWidgets.QDialog, Ui_Form):
         tensi = self.lbl_tensi.text()
         kategori = self.lbl_kategori.text()
         berlaku = self.cb_masaberlaku.currentText()[:1]
+        pw = self.lbl_pw.text()
 
-        
+        datafile_name = 'foo.csv'
+        if os.path.isfile(datafile_name):
+            os.remove(datafile_name)
 
+        a = np.array([[current_date,nik,nama,kelamin,umur,suhu[2:],tensi[2:],bpm[2:],spo2[2:],berlaku,kategori[2:]]])
+        with open('foo.csv', 'a') as file:
+            mywriter = csv.writer(file, delimiter=',')
+            mywriter.writerows(a)
 
-        
-        
-        
+        path_on_cloud = "result/" + nik + "_" + pw + ".csv"
+        fb.publish(path_on_cloud=path_on_cloud,path_local="foo.csv")
+
     def generate(self):
         def pw_generator(size=6, chars=string.ascii_uppercase + string.digits):
             return ''.join(random.choice(chars) for _ in range(size))
@@ -127,11 +135,11 @@ class gui (QtWidgets.QDialog, Ui_Form):
             scatter_x.append(t_vec[jj])
             scatter_y.append(y_vals[jj])
         bpm = 60/np.mean(np.diff(scatter_x))
-        self.lbl_bpm.setText(": " + str(bpm)[:5] + " BPM")
+        self.lbl_bpm.setText(": " + str(bpm)[:5])
         
         ## calculate SPo2
         ratio_vec,spo2_vec = self.find_spo2(t_vec=t_vec,red_vec=red_vec, ir_vec=ir_vec, sample=int(np.mean(np.diff(indexes))))
-        self.lbl_spo2.setText(": " + str(np.mean(spo2_vec))[:5] + " %")
+        self.lbl_spo2.setText(": " + str(np.mean(spo2_vec))[:5])
 
         ## saving data
         with open(datafile_name,'a') as f:
@@ -160,7 +168,7 @@ class gui (QtWidgets.QDialog, Ui_Form):
                 suhu_prev = float(curr_data[1])
 
         #AVERAGE
-        self.lbl_suhu.setText(": " + str(np.mean(suhu_vec))[:5] + " Celcius")
+        self.lbl_suhu.setText(": " + str(np.mean(suhu_vec))[:5])
 
         ## saving data
         with open(datafile_name,'a') as f:
