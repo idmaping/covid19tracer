@@ -163,6 +163,7 @@ void setup() {
   digitalWrite(LED_G, HIGH);
   digitalWrite(LED_R, LOW);
 
+  /*
   while (!Serial); //We must wait for Teensy to come online
   delay(100);
   digitalWrite(LED_G, LOW);
@@ -174,8 +175,17 @@ void setup() {
   kirimSuhu(50);
   delay(100); Serial.println("ENDMEASURE"); Serial.println(""); Serial.println("");
   endMeasuring();
+  */
 }
 
 void loop() {
+  digitalWrite(VALVE,LOW);
+  digitalWrite(AIRPUMP,HIGH);
+  delay(10000);
 
+  
+  digitalWrite(VALVE,HIGH);
+  digitalWrite(AIRPUMP,LOW);
+  delay(2000);
+  
 }

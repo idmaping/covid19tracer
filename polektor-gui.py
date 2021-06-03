@@ -14,13 +14,22 @@ from matplotlib import cm
 import scipy.signal
 import string,random
 import fb_config as fb
+import knn
+
+class ClickableLineEdit(QLineEdit):
+    clicked = pyqtSignal() # signal when the text entry is left clicked
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton: self.clicked.emit()
+        else: super().mousePressEvent(event)
 
 class gui (QtWidgets.QDialog, Ui_Form):
+    sigKeyButtonClicked = pyqtSignal(object) 
     def __init__(self):
         super().__init__()
         self.setupUi(self)
         self.port = ""
-
+        self.setWindowState(QtCore.Qt.WindowMaximized)
         self.start_word = False
         self.max30105 = []
         self.mlx90614 = []
@@ -30,6 +39,255 @@ class gui (QtWidgets.QDialog, Ui_Form):
         self.btn_measure.clicked.connect(self.measure)
         self.btn_generate.clicked.connect(self.generate)
         self.btn_validation.clicked.connect(self.validation)
+        self.btn_predict.clicked.connect(self.predict)
+
+        #KNN
+        self.knn = knn.knn()
+        self.knn.initialize()
+        #retval, result, neigh_resp, dists = self.knn.predict()
+
+        #INPUT
+        self.in_nama.clicked.connect(self.handle_in_nama)
+        self.in_nik.clicked.connect(self.handle_in_nik)
+        self.in_umur.clicked.connect(self.handle_in_umur)
+        self.in_sys.clicked.connect(self.handle_in_sys)
+        self.in_dias.clicked.connect(self.handle_in_dias)
+        self.in_suhu.clicked.connect(self.handle_in_suhu)
+        self.in_bpm.clicked.connect(self.handle_in_bpm)
+        self.in_spo2.clicked.connect(self.handle_in_spo2)
+        
+        #KEYBOARD
+        self.pos_cursor = 0 #0:none 1:nama 2:nik 3:21 4:diastole 5:sistole 6:suhu 7:jantung 8:spo2
+        self.buff_key = ''
+        self.key_q.clicked.connect(self.inkey_q)
+        self.key_w.clicked.connect(self.inkey_w)
+        self.key_e.clicked.connect(self.inkey_e)
+        self.key_r.clicked.connect(self.inkey_r)
+        self.key_t.clicked.connect(self.inkey_t)
+        self.key_y.clicked.connect(self.inkey_y)
+        self.key_u.clicked.connect(self.inkey_u)
+        self.key_i.clicked.connect(self.inkey_i)
+        self.key_o.clicked.connect(self.inkey_o)
+        self.key_p.clicked.connect(self.inkey_p)
+        self.key_a.clicked.connect(self.inkey_a)
+        self.key_s.clicked.connect(self.inkey_s)
+        self.key_d.clicked.connect(self.inkey_d)
+        self.key_f.clicked.connect(self.inkey_f)
+        self.key_g.clicked.connect(self.inkey_g)
+        self.key_h.clicked.connect(self.inkey_h)
+        self.key_j.clicked.connect(self.inkey_j)
+        self.key_k.clicked.connect(self.inkey_k)
+        self.key_l.clicked.connect(self.inkey_l)
+        self.key_z.clicked.connect(self.inkey_z)
+        self.key_x.clicked.connect(self.inkey_x)
+        self.key_c.clicked.connect(self.inkey_c)
+        self.key_v.clicked.connect(self.inkey_v)
+        self.key_b.clicked.connect(self.inkey_b)
+        self.key_n.clicked.connect(self.inkey_n)
+        self.key_m.clicked.connect(self.inkey_m)
+        self.key_1.clicked.connect(self.inkey_1)
+        self.key_2.clicked.connect(self.inkey_2)
+        self.key_3.clicked.connect(self.inkey_3)
+        self.key_4.clicked.connect(self.inkey_4)
+        self.key_5.clicked.connect(self.inkey_5)
+        self.key_6.clicked.connect(self.inkey_6)
+        self.key_7.clicked.connect(self.inkey_7)
+        self.key_8.clicked.connect(self.inkey_8)
+        self.key_9.clicked.connect(self.inkey_9)
+        self.key_0.clicked.connect(self.inkey_0)
+    
+    def handle_in_nama(self):
+        self.pos_cursor = 1
+    def handle_in_nik(self):
+        self.pos_cursor = 2
+    def handle_in_umur(self):
+        self.pos_cursor = 3
+    def handle_in_sys(self):
+        self.pos_cursor = 4
+    def handle_in_dias(self):
+        self.pos_cursor = 5
+    def handle_in_suhu(self):
+        self.pos_cursor = 6
+    def handle_in_bpm(self):
+        self.pos_cursor = 7
+    def handle_in_spo2(self):
+        self.pos_cursor = 8
+
+
+    def input_buffer(self):
+        if self.pos_cursor == 1:
+            currenttext = self.in_nama.text()
+            self.in_nama.setText(currenttext + self.buff_key)
+
+        elif self.pos_cursor == 2:
+            currenttext = self.in_nik.text()
+            self.in_nik.setText(currenttext + self.buff_key)
+        
+        elif self.pos_cursor == 3:
+            currenttext = self.in_umur.text()
+            self.in_umur.setText(currenttext + self.buff_key)
+
+        elif self.pos_cursor == 4:
+            currenttext = self.in_sys.text()
+            self.in_sys.setText(currenttext + self.buff_key)
+
+        elif self.pos_cursor == 5:
+            currenttext = self.in_dias.text()
+            self.in_dias.setText(currenttext + self.buff_key)
+
+        elif self.pos_cursor == 6:
+            currenttext = self.in_suhu.text()
+            self.in_suhu.setText(currenttext + self.buff_key)
+
+        elif self.pos_cursor == 7:
+            currenttext = self.in_bpm.text()
+            self.in_bpm.setText(currenttext + self.buff_key)
+
+        elif self.pos_cursor == 8:
+            currenttext = self.in_spo2.text()
+            self.in_spo2.setText(currenttext + self.buff_key)
+        
+    def inkey_q(self):
+        self.buff_key = 'Q'
+        self.input_buffer()
+    def inkey_w(self):
+        self.buff_key = 'W'
+        self.input_buffer()
+    def inkey_e(self):
+        self.buff_key = 'E'
+        self.input_buffer()
+    def inkey_r(self):
+        self.buff_key = 'R'
+        self.input_buffer()
+    def inkey_t(self):
+        self.buff_key = 'T'
+        self.input_buffer()
+    def inkey_y(self):
+        self.buff_key = 'Y'
+        self.input_buffer()
+    def inkey_u(self):
+        self.buff_key = 'U'
+        self.input_buffer()
+    def inkey_i(self):
+        self.buff_key = 'I'
+        self.input_buffer()
+    def inkey_o(self):
+        self.buff_key = 'O'
+        self.input_buffer()
+    def inkey_p(self):
+        self.buff_key = 'P'
+        self.input_buffer()
+    def inkey_a(self):
+        self.buff_key = 'A'
+        self.input_buffer()
+    def inkey_s(self):
+        self.buff_key = 'S'
+        self.input_buffer()
+    def inkey_d(self):
+        self.buff_key = 'D'
+        self.input_buffer()
+    def inkey_f(self):
+        self.buff_key = 'F'
+        self.input_buffer()
+    def inkey_g(self):
+        self.buff_key = 'G'
+        self.input_buffer()
+    def inkey_h(self):
+        self.buff_key = 'H'
+        self.input_buffer()
+    def inkey_j(self):
+        self.buff_key = 'J'
+        self.input_buffer()
+    def inkey_k(self):
+        self.buff_key = 'K'
+        self.input_buffer()
+    def inkey_l(self):
+        self.buff_key = 'L'
+        self.input_buffer()
+    def inkey_z(self):
+        self.buff_key = 'Z'
+        self.input_buffer()
+    def inkey_x(self):
+        self.buff_key = 'X'
+        self.input_buffer()
+    def inkey_c(self):
+        self.buff_key = 'C'
+        self.input_buffer()
+    def inkey_v(self):
+        self.buff_key = 'V'
+        self.input_buffer()
+    def inkey_b(self):
+        self.buff_key = 'B'
+        self.input_buffer()
+    def inkey_n(self):
+        self.buff_key = 'N'
+        self.input_buffer()
+    def inkey_m(self):
+        self.buff_key = 'M'
+        self.input_buffer()
+    def inkey_1(self):
+        self.buff_key = '1'
+        self.input_buffer()
+    def inkey_2(self):
+        self.buff_key = '2'
+        self.input_buffer()
+    def inkey_3(self):
+        self.buff_key = '3'
+        self.input_buffer()
+    def inkey_4(self):
+        self.buff_key = '4'
+        self.input_buffer()
+    def inkey_5(self):
+        self.buff_key = '5'
+        self.input_buffer()
+    def inkey_6(self):
+        self.buff_key = '6'
+        self.input_buffer()
+    def inkey_7(self):
+        self.buff_key = '7'
+        self.input_buffer()
+    def inkey_8(self):
+        self.buff_key = '8'
+        self.input_buffer()
+    def inkey_9(self):
+        self.buff_key = '9'
+        self.input_buffer()
+    def inkey_0(self):
+        self.buff_key = '0'
+        self.input_buffer()
+        
+    
+
+    def predict(self):
+        kelamin = self.cb_kelamin.currentText()
+        if kelamin == "Pria" :
+            kelamin = ord("L")
+        elif kelamin == "Wanita":
+            kelamin = ord("P")
+
+        umur = self.in_umur.text()
+        suhu = self.lbl_suhu.text()
+        bpm = self.lbl_bpm.text()
+        spo2 = self.lbl_spo2.text()
+        sys = self.lbl_sys.text()
+        dias = self.lbl_dias.text()
+        
+        retval, result, neigh_resp, dists = self.knn.predict(umur=umur,
+                                                            jenis_kelamin=kelamin,
+                                                            suhu=suhu,
+                                                            detak_jantung=bpm,
+                                                            spo2=spo2,
+                                                            systole=sys,
+                                                            diastole=dias,
+                                                            k=5)
+
+        print(retval, result, neigh_resp, dists)
+        if result == 'N':
+            self.lbl_kategori.setText("Negatif")
+        elif result == 'P':
+            self.lbl_kategori.setText("Positif")
+        
+        
 
     def validation(self):
         current_date = self.lbl_time.text()
@@ -40,7 +298,7 @@ class gui (QtWidgets.QDialog, Ui_Form):
         suhu = self.lbl_suhu.text()
         bpm = self.lbl_bpm.text()
         spo2 = self.lbl_spo2.text()
-        tensi = self.lbl_tensi.text()
+        tensi = self.lbl_sys.text() + "" + self.lbl_dias.text()
         kategori = self.lbl_kategori.text()
         berlaku = self.cb_masaberlaku.currentText()[:1]
         pw = self.lbl_pw.text()
@@ -163,7 +421,7 @@ class gui (QtWidgets.QDialog, Ui_Form):
             if len(curr_data)==2:
                 if abs((float(curr_data[1])-suhu_prev)/float(curr_data[1]))>1.01:
                     continue
-                t_vec.append(float(curr_data[0])/1000000.0)
+                t_vec.append(float(c1069urr_data[0])/1000000.0)
                 suhu_vec.append(float(curr_data[1]))
                 suhu_prev = float(curr_data[1])
 
@@ -189,7 +447,6 @@ class gui (QtWidgets.QDialog, Ui_Form):
             while True:
                 curr_line = ser.readline()
                 if self.start_word == False:
-
                     if curr_line[0:-2]==b'MAX30102':
                         self.start_word = "MAX30102"
                         continue
