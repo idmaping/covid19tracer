@@ -421,7 +421,7 @@ class gui (QtWidgets.QDialog, Ui_Form):
             if len(curr_data)==2:
                 if abs((float(curr_data[1])-suhu_prev)/float(curr_data[1]))>1.01:
                     continue
-                t_vec.append(float(c1069urr_data[0])/1000000.0)
+                t_vec.append(float(curr_data[0])/1000000.0)
                 suhu_vec.append(float(curr_data[1]))
                 suhu_prev = float(curr_data[1])
 
