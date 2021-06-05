@@ -40,6 +40,7 @@ class gui (QtWidgets.QDialog, Ui_Form):
         self.btn_generate.clicked.connect(self.generate)
         self.btn_validation.clicked.connect(self.validation)
         self.btn_predict.clicked.connect(self.predict)
+        self.btn_reset.clicked.connect(self.reset_data)
 
         #KNN
         self.knn = knn.knn()
@@ -95,34 +96,158 @@ class gui (QtWidgets.QDialog, Ui_Form):
         self.key_8.clicked.connect(self.inkey_8)
         self.key_9.clicked.connect(self.inkey_9)
         self.key_0.clicked.connect(self.inkey_0)
+        self.key_space.clicked.connect(self.inkey_space)
+        self.key_comma.clicked.connect(self.inkey_comma)
+        self.key_bs.clicked.connect(self.handle_inkey_bs)
+        self.key_enter.clicked.connect(self.handle_inkey_enter)
+        self.key_del.clicked.connect(self.handle_inkey_del)
     
-    def handle_in_nama(self):
-        self.pos_cursor = 1
-    def handle_in_nik(self):
-        self.pos_cursor = 2
-    def handle_in_umur(self):
-        self.pos_cursor = 3
-    def handle_in_sys(self):
-        self.pos_cursor = 4
-    def handle_in_dias(self):
-        self.pos_cursor = 5
-    def handle_in_suhu(self):
-        self.pos_cursor = 6
-    def handle_in_bpm(self):
-        self.pos_cursor = 7
-    def handle_in_spo2(self):
-        self.pos_cursor = 8
+    def handle_inkey_del(self):
+        if self.pos_cursor == 1:
+            self.in_nama.setText("")
+        elif self.pos_cursor == 2:
+            self.in_nik.setText("")
+        elif self.pos_cursor == 3:
+            self.in_umur.setText("")
+        elif self.pos_cursor == 4:
+            self.in_sys.setText("")
+        elif self.pos_cursor == 5:
+            self.in_dias.setText("")
+        elif self.pos_cursor == 6:
+            self.in_suhu.setText("")
+        elif self.pos_cursor == 7:
+            self.in_bpm.setText("")
+        elif self.pos_cursor == 8:
+            self.in_spo2.setText("")
 
+    def reset_data(self):
+        self.in_nama.setText("")
+        self.in_nik.setText("")
+        self.in_umur.setText("")
+        self.in_sys.setText("")
+        self.in_dias.setText("")
+        self.in_suhu.setText("")
+        self.in_bpm.setText("")
+        self.in_spo2.setText("")
+        self.lbl_kategori.setText("-")
 
-    def input_buffer(self):
+    def handle_inkey_enter(self):
+        self.pos_cursor = 0
+        self.clear_color_button()
+
+    def handle_inkey_bs(self):
         if self.pos_cursor == 1:
             currenttext = self.in_nama.text()
-            self.in_nama.setText(currenttext + self.buff_key)
-
+            self.in_nama.setText(currenttext[:-1])
         elif self.pos_cursor == 2:
             currenttext = self.in_nik.text()
-            self.in_nik.setText(currenttext + self.buff_key)
+            self.in_nik.setText(currenttext[:-1])
+        elif self.pos_cursor == 3:
+            currenttext = self.in_umur.text()
+            self.in_umur.setText(currenttext[:-1])
+        elif self.pos_cursor == 4:
+            currenttext = self.in_sys.text()
+            self.in_sys.setText(currenttext[:-1])
+        elif self.pos_cursor == 5:
+            currenttext = self.in_dias.text()
+            self.in_dias.setText(currenttext[:-1])
+        elif self.pos_cursor == 6:
+            currenttext = self.in_suhu.text()
+            self.in_suhu.setText(currenttext[:-1])
+        elif self.pos_cursor == 7:
+            currenttext = self.in_bpm.text()
+            self.in_bpm.setText(currenttext[:-1])
+        elif self.pos_cursor == 8:
+            currenttext = self.in_spo2.text()
+            self.in_spo2.setText(currenttext[:-1])
+
+    def clear_color_button(self):
+        self.in_nama.setStyleSheet("QPushButton{font-size : 18px;}")
+        self.in_nik.setStyleSheet("QPushButton{font-size : 18px;}")
+        self.in_umur.setStyleSheet("QPushButton{font-size : 18px;}")
+        self.in_sys.setStyleSheet("QPushButton{font-size : 18px;}")
+        self.in_dias.setStyleSheet("QPushButton{font-size : 18px;}")
+        self.in_bpm.setStyleSheet("QPushButton{font-size : 18px;}")
+        self.in_spo2.setStyleSheet("QPushButton{font-size : 18px;}")
+        self.in_suhu.setStyleSheet("QPushButton{font-size : 18px;}")
         
+    def handle_in_nama(self):
+        self.clear_color_button()
+        self.in_nama.setStyleSheet("QPushButton{background-color : rgb(85, 87, 83);}"
+                                   "QPushButton{color : rgb(238, 238, 236);}"
+                                   "QPushButton{font-size : 18px;}")
+        self.pos_cursor = 1
+        self.enable_abjad = True
+        self.enable_angka = False
+
+    def handle_in_nik(self):
+        self.clear_color_button()
+        self.in_nik.setStyleSheet("QPushButton{background-color : rgb(85, 87, 83);}"
+                                   "QPushButton{color : rgb(238, 238, 236);}"
+                                   "QPushButton{font-size : 18px;}")
+        self.pos_cursor = 2
+        self.enable_abjad = False
+        self.enable_angka = True
+
+    def handle_in_umur(self):
+        self.clear_color_button()
+        self.in_umur.setStyleSheet("QPushButton{background-color : rgb(85, 87, 83);}"
+                                   "QPushButton{color : rgb(238, 238, 236);}"
+                                   "QPushButton{font-size : 18px;}")
+        self.pos_cursor = 3
+        self.enable_abjad = False
+        self.enable_angka = True
+
+    def handle_in_sys(self):
+        self.clear_color_button()
+        self.in_sys.setStyleSheet("QPushButton{background-color : rgb(85, 87, 83);}"
+                                   "QPushButton{color : rgb(238, 238, 236);}"
+                                   "QPushButton{font-size : 18px;}")
+        self.pos_cursor = 4
+        self.enable_abjad = False
+        self.enable_angka = True
+
+    def handle_in_dias(self):
+        self.clear_color_button()
+        self.in_dias.setStyleSheet("QPushButton{background-color : rgb(85, 87, 83);}"
+                                   "QPushButton{color : rgb(238, 238, 236);}"
+                                   "QPushButton{font-size : 18px;}")
+        self.pos_cursor = 5
+        self.enable_abjad = False
+        self.enable_angka = True
+
+    def handle_in_suhu(self):
+        self.clear_color_button()
+        self.in_suhu.setStyleSheet("QPushButton{background-color : rgb(85, 87, 83);}"
+                                   "QPushButton{color : rgb(238, 238, 236);}"
+                                   "QPushButton{font-size : 18px;}")
+        self.pos_cursor = 6
+        self.enable_abjad = False
+        self.enable_angka = True
+
+    def handle_in_bpm(self):
+        self.clear_color_button()
+        self.in_bpm.setStyleSheet("QPushButton{background-color : rgb(85, 87, 83);}"
+                                   "QPushButton{color : rgb(238, 238, 236);}"
+                                   "QPushButton{font-size : 18px;}")
+        self.pos_cursor = 7
+        self.enable_abjad = False
+        self.enable_angka = True
+
+    def handle_in_spo2(self):
+        self.clear_color_button()
+        self.in_spo2.setStyleSheet("QPushButton{background-color : rgb(85, 87, 83);}"
+                                   "QPushButton{color : rgb(238, 238, 236);}"
+                                   "QPushButton{font-size : 18px;}")
+        self.pos_cursor = 8
+        self.enable_abjad = False
+        self.enable_angka = True
+
+    def input_angka(self):
+        if self.pos_cursor == 2:
+            currenttext = self.in_nik.text()
+            self.in_nik.setText(currenttext + self.buff_key)
+
         elif self.pos_cursor == 3:
             currenttext = self.in_umur.text()
             self.in_umur.setText(currenttext + self.buff_key)
@@ -146,118 +271,126 @@ class gui (QtWidgets.QDialog, Ui_Form):
         elif self.pos_cursor == 8:
             currenttext = self.in_spo2.text()
             self.in_spo2.setText(currenttext + self.buff_key)
-        
+    def input_abjad(self):
+        if self.pos_cursor == 1:
+            currenttext = self.in_nama.text()
+            self.in_nama.setText(currenttext + self.buff_key)
+
+    def inkey_space(self):
+        self.buff_key = ' '
+        self.input_abjad()
     def inkey_q(self):
         self.buff_key = 'Q'
-        self.input_buffer()
+        self.input_abjad()
     def inkey_w(self):
         self.buff_key = 'W'
-        self.input_buffer()
+        self.input_abjad()
     def inkey_e(self):
         self.buff_key = 'E'
-        self.input_buffer()
+        self.input_abjad()
     def inkey_r(self):
         self.buff_key = 'R'
-        self.input_buffer()
+        self.input_abjad()
     def inkey_t(self):
         self.buff_key = 'T'
-        self.input_buffer()
+        self.input_abjad()
     def inkey_y(self):
         self.buff_key = 'Y'
-        self.input_buffer()
+        self.input_abjad()
     def inkey_u(self):
         self.buff_key = 'U'
-        self.input_buffer()
+        self.input_abjad()
     def inkey_i(self):
         self.buff_key = 'I'
-        self.input_buffer()
+        self.input_abjad()
     def inkey_o(self):
         self.buff_key = 'O'
-        self.input_buffer()
+        self.input_abjad()
     def inkey_p(self):
         self.buff_key = 'P'
-        self.input_buffer()
+        self.input_abjad()
     def inkey_a(self):
         self.buff_key = 'A'
-        self.input_buffer()
+        self.input_abjad()
     def inkey_s(self):
         self.buff_key = 'S'
-        self.input_buffer()
+        self.input_abjad()
     def inkey_d(self):
         self.buff_key = 'D'
-        self.input_buffer()
+        self.input_abjad()
     def inkey_f(self):
         self.buff_key = 'F'
-        self.input_buffer()
+        self.input_abjad()
     def inkey_g(self):
         self.buff_key = 'G'
-        self.input_buffer()
+        self.input_abjad()
     def inkey_h(self):
         self.buff_key = 'H'
-        self.input_buffer()
+        self.input_abjad()
     def inkey_j(self):
         self.buff_key = 'J'
-        self.input_buffer()
+        self.input_abjad()
     def inkey_k(self):
         self.buff_key = 'K'
-        self.input_buffer()
+        self.input_abjad()
     def inkey_l(self):
         self.buff_key = 'L'
-        self.input_buffer()
+        self.input_abjad()
     def inkey_z(self):
         self.buff_key = 'Z'
-        self.input_buffer()
+        self.input_abjad()
     def inkey_x(self):
         self.buff_key = 'X'
-        self.input_buffer()
+        self.input_abjad()
     def inkey_c(self):
         self.buff_key = 'C'
-        self.input_buffer()
+        self.input_abjad()
     def inkey_v(self):
         self.buff_key = 'V'
-        self.input_buffer()
+        self.input_abjad()
     def inkey_b(self):
         self.buff_key = 'B'
-        self.input_buffer()
+        self.input_abjad()
     def inkey_n(self):
         self.buff_key = 'N'
-        self.input_buffer()
+        self.input_abjad()
     def inkey_m(self):
         self.buff_key = 'M'
-        self.input_buffer()
+        self.input_abjad()
     def inkey_1(self):
         self.buff_key = '1'
-        self.input_buffer()
+        self.input_angka()
     def inkey_2(self):
         self.buff_key = '2'
-        self.input_buffer()
+        self.input_angka()
     def inkey_3(self):
         self.buff_key = '3'
-        self.input_buffer()
+        self.input_angka()
     def inkey_4(self):
         self.buff_key = '4'
-        self.input_buffer()
+        self.input_angka()
     def inkey_5(self):
         self.buff_key = '5'
-        self.input_buffer()
+        self.input_angka()
     def inkey_6(self):
         self.buff_key = '6'
-        self.input_buffer()
+        self.input_angka()
     def inkey_7(self):
         self.buff_key = '7'
-        self.input_buffer()
+        self.input_angka()
     def inkey_8(self):
         self.buff_key = '8'
-        self.input_buffer()
+        self.input_angka()
     def inkey_9(self):
         self.buff_key = '9'
-        self.input_buffer()
+        self.input_angka()
     def inkey_0(self):
         self.buff_key = '0'
-        self.input_buffer()
-        
+        self.input_angka()
+    def inkey_comma(self):
+        self.buff_key = '.'
+        self.input_angka()
     
-
     def predict(self):
         kelamin = self.cb_kelamin.currentText()
         if kelamin == "Pria" :
@@ -266,12 +399,13 @@ class gui (QtWidgets.QDialog, Ui_Form):
             kelamin = ord("P")
 
         umur = self.in_umur.text()
-        suhu = self.lbl_suhu.text()
-        bpm = self.lbl_bpm.text()
-        spo2 = self.lbl_spo2.text()
-        sys = self.lbl_sys.text()
-        dias = self.lbl_dias.text()
+        suhu = self.in_suhu.text()
+        bpm = self.in_bpm.text()
+        spo2 = self.in_spo2.text()
+        sys = self.in_sys.text()
+        dias = self.in_dias.text()
         
+        print(umur,kelamin,suhu,spo2,bpm,sys,dias)
         retval, result, neigh_resp, dists = self.knn.predict(umur=umur,
                                                             jenis_kelamin=kelamin,
                                                             suhu=suhu,
@@ -295,10 +429,10 @@ class gui (QtWidgets.QDialog, Ui_Form):
         nama = self.in_nama.text()
         kelamin = self.cb_kelamin.currentText()
         umur = self.in_umur.text()
-        suhu = self.lbl_suhu.text()
-        bpm = self.lbl_bpm.text()
-        spo2 = self.lbl_spo2.text()
-        tensi = self.lbl_sys.text() + "" + self.lbl_dias.text()
+        suhu = self.in_suhu.text()
+        bpm = self.in_bpm.text()
+        spo2 = self.in_spo2.text()
+        tensi = self.in_sys.text() + "/" + self.in_dias.text()
         kategori = self.lbl_kategori.text()
         berlaku = self.cb_masaberlaku.currentText()[:1]
         pw = self.lbl_pw.text()
@@ -307,7 +441,8 @@ class gui (QtWidgets.QDialog, Ui_Form):
         if os.path.isfile(datafile_name):
             os.remove(datafile_name)
 
-        a = np.array([[current_date,nik,nama,kelamin,umur,suhu[2:],tensi[2:],bpm[2:],spo2[2:],berlaku,kategori[2:]]])
+        a = np.array([[current_date,nik,nama,kelamin,umur,suhu,tensi,bpm,spo2,berlaku,kategori]])
+        
         with open('foo.csv', 'a') as file:
             mywriter = csv.writer(file, delimiter=',')
             mywriter.writerows(a)
@@ -393,11 +528,11 @@ class gui (QtWidgets.QDialog, Ui_Form):
             scatter_x.append(t_vec[jj])
             scatter_y.append(y_vals[jj])
         bpm = 60/np.mean(np.diff(scatter_x))
-        self.lbl_bpm.setText(": " + str(bpm)[:5])
+        self.in_bpm.setText(str(bpm)[:5])
         
         ## calculate SPo2
         ratio_vec,spo2_vec = self.find_spo2(t_vec=t_vec,red_vec=red_vec, ir_vec=ir_vec, sample=int(np.mean(np.diff(indexes))))
-        self.lbl_spo2.setText(": " + str(np.mean(spo2_vec))[:5])
+        self.in_spo2.setText(str(np.mean(spo2_vec))[:5])
 
         ## saving data
         with open(datafile_name,'a') as f:
@@ -426,7 +561,7 @@ class gui (QtWidgets.QDialog, Ui_Form):
                 suhu_prev = float(curr_data[1])
 
         #AVERAGE
-        self.lbl_suhu.setText(": " + str(np.mean(suhu_vec))[:5])
+        self.in_suhu.setText(str(np.mean(suhu_vec))[:5])
 
         ## saving data
         with open(datafile_name,'a') as f:
@@ -470,7 +605,7 @@ class gui (QtWidgets.QDialog, Ui_Form):
 if __name__=='__main__':
     import sys
     app = QtWidgets.QApplication(sys.argv)
-    app.setStyle('Windows')
+    app.setStyle('Fusion')
     window = gui()
     window.setWindowTitle('POLECTOR - Poltekad Covid19 Detector')
     window.show()
