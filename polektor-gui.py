@@ -5,16 +5,17 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from polektor import Ui_Form
-from validation import Ui_Dialog
+
 import serial, serial.tools.list_ports
-import time,os,csv
+import os,csv
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import cm
+
 import scipy.signal
 import string,random
 import fb_config as fb
 import knn
+from datetime import datetime
 
 class ClickableLineEdit(QLineEdit):
     clicked = pyqtSignal() # signal when the text entry is left clicked
@@ -34,6 +35,11 @@ class gui (QtWidgets.QDialog, Ui_Form):
         self.max30105 = []
         self.mlx90614 = []
         
+        #EVENT TIMER
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.time)
+        self.timer.start(1000)
+
         #EVENT HANDLE
         self.btn_refresh.clicked.connect(self.refresh)
         self.btn_measure.clicked.connect(self.measure)
@@ -101,6 +107,15 @@ class gui (QtWidgets.QDialog, Ui_Form):
         self.key_bs.clicked.connect(self.handle_inkey_bs)
         self.key_enter.clicked.connect(self.handle_inkey_enter)
         self.key_del.clicked.connect(self.handle_inkey_del)
+        self.btn_exit.clicked.connect(self.handle_exit)
+
+    def handle_exit(self):
+        sys.exit()
+
+    def time(self):
+        now = datetime.now()
+        self.lbl_jam.setText(now.strftime("%H:%M:%S"))
+        self.lbl_time.setText(now.strftime("%-m/%-d/%Y"))
     
     def handle_inkey_del(self):
         if self.pos_cursor == 1:
