@@ -10,7 +10,7 @@ import serial, serial.tools.list_ports
 import os,csv
 import numpy as np
 import matplotlib.pyplot as plt
-
+import time
 import scipy.signal
 import string,random
 import fb_config as fb
@@ -42,7 +42,8 @@ class gui (QtWidgets.QDialog, Ui_Form):
 
         #EVENT HANDLE
         self.btn_refresh.clicked.connect(self.refresh)
-        self.btn_measure_oxi.clicked.connect(self.measure)
+        self.btn_measure_oxi.clicked.connect(self.measure_oxi)
+        self.btn_measure_suhu.clicked.connect(self.measure_suhu)
         self.btn_generate.clicked.connect(self.generate)
         self.btn_validation.clicked.connect(self.validation)
         self.btn_predict.clicked.connect(self.predict)
@@ -51,7 +52,6 @@ class gui (QtWidgets.QDialog, Ui_Form):
         #KNN
         self.knn = knn.knn()
         self.knn.initialize()
-        #retval, result, neigh_resp, dists = self.knn.predict()
 
         #INPUT
         self.in_nama.clicked.connect(self.handle_in_nama)
@@ -110,7 +110,7 @@ class gui (QtWidgets.QDialog, Ui_Form):
         self.btn_exit.clicked.connect(self.handle_exit)
 
     def print(self,kata):
-        self.console.append(kata)
+        self.console.append(str(kata))
 
     def handle_exit(self):
         sys.exit()
@@ -411,9 +411,9 @@ class gui (QtWidgets.QDialog, Ui_Form):
     
     def predict(self):
         kelamin = self.cb_kelamin.currentText()
-        if kelamin == "Pria" :
+        if kelamin == "PRIA" :
             kelamin = ord("L")
-        elif kelamin == "Wanita":
+        elif kelamin == "WANITA":
             kelamin = ord("P")
 
         umur = self.in_umur.text()
@@ -432,12 +432,11 @@ class gui (QtWidgets.QDialog, Ui_Form):
                                                             systole=sys,
                                                             diastole=dias,
                                                             k=5)
-
         print(retval, result, neigh_resp, dists)
         if result == 'N':
-            self.lbl_kategori.setText("Negatif")
+            self.lbl_kategori.setText("NEGATIF")
         elif result == 'P':
-            self.lbl_kategori.setText("Positif")
+            self.lbl_kategori.setText("POSITIF")
         
         
 
@@ -467,6 +466,7 @@ class gui (QtWidgets.QDialog, Ui_Form):
 
         path_on_cloud = "result/" + nik + "_" + pw + ".csv"
         fb.publish(path_on_cloud=path_on_cloud,path_local="foo.csv")
+        self.print("PUBLISH DONE")
 
     def generate(self):
         def pw_generator(size=6, chars=string.ascii_uppercase + string.digits):
@@ -586,6 +586,59 @@ class gui (QtWidgets.QDialog, Ui_Form):
             writer = csv.writer(f,delimiter=',')
             for t,x in zip(t_vec,suhu_vec):
                 writer.writerow([t,x])
+
+    def measure_oxi(self):
+        self.max30105 = []
+        port = str(self.cb_serial.currentText())
+
+        if port == "None":
+            self.print("PORT IS DISCONNECTED") 
+        else:
+            self.print("BEGIN MEASURING OXI")
+            
+            arduino = serial.Serial(port=port,baudrate=115200,timeout=.1)
+            time.sleep(2)
+            arduino.write(bytes('0', 'utf-8'))
+            time.sleep(0.05)
+
+            while True:
+                curr_line = arduino.readline()
+                if curr_line[0:-2]==b'ENDMEASURE':
+                    break
+                if curr_line[0:-2]!=b'':
+                    self.max30105.append(curr_line)
+                
+
+            self.calculate_oximeter()
+            self.print("MEASURING OXI DONE")
+
+    def measure_suhu(self):
+        self.mlx90614 = []
+        port = str(self.cb_serial.currentText())
+
+        if port == "None":
+            self.print("PORT IS DISCONNECTED") 
+        else:
+            self.print("BEGIN MEASURING SUHU")
+            
+            arduino = serial.Serial(port=port,baudrate=115200,timeout=.1)
+            time.sleep(2)
+            arduino.write(bytes('1', 'utf-8'))
+            time.sleep(0.05)
+
+            while True:
+                curr_line = arduino.readline()
+                if curr_line[0:-2]==b'ENDMEASURE':
+                    break
+                if curr_line[0:-2]!=b'':
+                    self.mlx90614.append(curr_line)
+                
+            self.calculate_suhu()
+            self.print("MEASURING SUHU DONE")
+                
+
+
+
 
     def measure(self):
         port = str(self.cb_serial.currentText())

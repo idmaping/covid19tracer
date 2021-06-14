@@ -39,13 +39,11 @@ class knn:
         in_measure = np.float32(in_measure)
         retval, results, neigh_resp, dists = self.kNearest.findNearest(in_measure, k = k)              
         results = str(chr(int(results[0][0])))
-        
-        
         return retval, results, neigh_resp, dists
 
 if __name__=="__main__":
     knn = knn()
-    knn.generate_dataset()
+    knn.generate_dataset(file='datasetRST.csv')
     #knn.initialize()
     #retval, result, neigh_resp, dists = knn.predict()
     
