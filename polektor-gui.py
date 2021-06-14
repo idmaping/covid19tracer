@@ -424,20 +424,24 @@ class gui (QtWidgets.QDialog, Ui_Form):
         dias = self.in_dias.text()
         
         print(umur,kelamin,suhu,spo2,bpm,sys,dias)
-        retval, result, neigh_resp, dists = self.knn.predict(umur=umur,
-                                                            jenis_kelamin=kelamin,
-                                                            suhu=suhu,
-                                                            detak_jantung=bpm,
-                                                            spo2=spo2,
-                                                            systole=sys,
-                                                            diastole=dias,
-                                                            k=5)
-        print(retval, result, neigh_resp, dists)
-        if result == 'N':
-            self.lbl_kategori.setText("NEGATIF")
-        elif result == 'P':
-            self.lbl_kategori.setText("POSITIF")
-        
+        try:
+            retval, result, neigh_resp, dists = self.knn.predict(umur=umur,
+                                                                jenis_kelamin=kelamin,
+                                                                suhu=suhu,
+                                                                detak_jantung=bpm,
+                                                                spo2=spo2,
+                                                                systole=sys,
+                                                                diastole=dias,
+                                                                k=5)
+            print(retval, result, neigh_resp, dists)
+            if result == 'N':
+                self.lbl_kategori.setText("NEGATIF")
+            elif result == 'P':
+                self.lbl_kategori.setText("POSITIF")
+            self.print("DONE PREDICT")
+            
+        except:
+            self.print("DATA TIDAK LENGKAP")
         
 
     def validation(self):
