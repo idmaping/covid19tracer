@@ -42,7 +42,7 @@ class gui (QtWidgets.QDialog, Ui_Form):
 
         #EVENT HANDLE
         self.btn_refresh.clicked.connect(self.refresh)
-        self.btn_measure.clicked.connect(self.measure)
+        self.btn_measure_oxi.clicked.connect(self.measure)
         self.btn_generate.clicked.connect(self.generate)
         self.btn_validation.clicked.connect(self.validation)
         self.btn_predict.clicked.connect(self.predict)
@@ -108,6 +108,9 @@ class gui (QtWidgets.QDialog, Ui_Form):
         self.key_enter.clicked.connect(self.handle_inkey_enter)
         self.key_del.clicked.connect(self.handle_inkey_del)
         self.btn_exit.clicked.connect(self.handle_exit)
+
+    def print(self,kata):
+        self.console.append(kata)
 
     def handle_exit(self):
         sys.exit()
@@ -587,9 +590,9 @@ class gui (QtWidgets.QDialog, Ui_Form):
     def measure(self):
         port = str(self.cb_serial.currentText())
         if port == "None":
-            print("PORT IS DISCONNECTED") #TAMPILKAN ALERT MESSAGE
+            self.print("PORT IS DISCONNECTED") 
         else:
-            print("BEGIN MEASURING OXIMETER") #TAMPILKAN SHOW MESSAGE
+            self.print("BEGIN MEASURING") 
             ser = serial.Serial(port,baudrate=115200)
             self.start_word = False
             self.max30105 = []
@@ -604,6 +607,7 @@ class gui (QtWidgets.QDialog, Ui_Form):
                     elif curr_line[0:-2]==b'MLX90614':
                         self.start_word = "MLX90614"
                         continue
+                    
                     else :
                         continue
                 if curr_line[0:-2]==b'END':
@@ -614,6 +618,7 @@ class gui (QtWidgets.QDialog, Ui_Form):
                     self.max30105.append(curr_line)
                 if self.start_word == "MLX90614":
                     self.mlx90614.append(curr_line)
+
             self.calculate_oximeter()
             self.calculate_suhu()
             
