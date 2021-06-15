@@ -105,6 +105,8 @@ for i in range(1,len(tMaximas)-1):
 if oscEndInd == 0:
     oscEndInd = len(tMaximas)-4
 
+print("cas",oscStartInd,oscEndInd)
+
 ## PROCESSING
 tStart = tMaximas[oscStartInd]
 tEnd = tMaximas[oscEndInd]
