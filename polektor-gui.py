@@ -34,6 +34,7 @@ class gui (QtWidgets.QDialog, Ui_Form):
         self.start_word = False
         self.max30105 = []
         self.mlx90614 = []
+        self.adstensi = []
         
         #EVENT TIMER
         self.timer = QtCore.QTimer()
@@ -44,10 +45,12 @@ class gui (QtWidgets.QDialog, Ui_Form):
         self.btn_refresh.clicked.connect(self.refresh)
         self.btn_measure_oxi.clicked.connect(self.measure_oxi)
         self.btn_measure_suhu.clicked.connect(self.measure_suhu)
+        self.btn_measure_tensi.clicked.connect(self.measure_tensi)
         self.btn_generate.clicked.connect(self.generate)
         self.btn_validation.clicked.connect(self.validation)
         self.btn_predict.clicked.connect(self.predict)
         self.btn_reset.clicked.connect(self.reset_data)
+        
 
         #KNN
         self.knn = knn.knn()
@@ -591,6 +594,33 @@ class gui (QtWidgets.QDialog, Ui_Form):
             for t,x in zip(t_vec,suhu_vec):
                 writer.writerow([t,x])
 
+    def calculate_tensi(self):
+        datafile_name = 'adstensi_data.csv'
+        if os.path.isfile(datafile_name):
+            os.remove(datafile_name)
+
+        t_vec,tensi_vec = [],[]
+        tensi_prev = 0.0
+        for ii in range(3,len(self.adstensi)):
+            try:
+                curr_data = (self.adstensi[ii][0:-2]).decode("utf-8").split(',')
+            except:
+                continue
+            if len(curr_data)==2:
+                if abs((float(curr_data[1])-tensi_prev)/float(curr_data[1]))>1.01:
+                    continue
+                t_vec.append(float(curr_data[0])/1000000.0)
+                tensi_vec.append(float(curr_data[1]))
+                tensi_prev = float(curr_data[1])
+
+        ## saving data
+        with open(datafile_name,'a') as f:
+            writer = csv.writer(f,delimiter=',')
+            for t,x in zip(t_vec,tensi_vec):
+                writer.writerow([t,x])
+
+
+
     def measure_oxi(self):
         self.max30105 = []
         port = str(self.cb_serial.currentText())
@@ -640,7 +670,31 @@ class gui (QtWidgets.QDialog, Ui_Form):
             self.calculate_suhu()
             self.print("MEASURING SUHU DONE")
                 
+    def measure_tensi(self):
+        self.adstensi = []
+        port = str(self.cb_serial.currentText())
 
+        if port == "None":
+            self.print("PORT IS DISCONNECTED") 
+        else:
+            self.print("BEGIN MEASURING TENSI")
+            
+            arduino = serial.Serial(port=port,baudrate=115200,timeout=.1)
+            time.sleep(2)
+            arduino.write(bytes('2', 'utf-8'))
+            time.sleep(0.05)
+
+            while True:
+                curr_line = arduino.readline()
+                if curr_line[0:-2]==b'ENDMEASURE':
+                    break
+                if curr_line[0:-2]!=b'':
+                    self.adstensi.append(curr_line)
+                    print(curr_line)
+                
+            self.calculate_tensi()
+            self.print("MEASURING TENSI DONE")
+    
 
 
 

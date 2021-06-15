@@ -10,6 +10,10 @@
 MAX30105 particleSensor;
 #define USEFIFO
 
+#include <Adafruit_ADS1X15.h>
+Adafruit_ADS1115 ads;
+
+int16_t adc0;
 bool logicLed = LOW;
 int x;
 
@@ -154,7 +158,32 @@ void kirimSuhu(long waktuKirim) {
     delay(200);
   }
 }
+void kirimTensi(long waktuPompa, long waktuTunggu) {
+  beginMeasuring();
+  ads.begin();
+  digitalWrite(VALVE, HIGH); delay(3000); digitalWrite(VALVE, LOW);
+  //digitalWrite(AIRPUMP, HIGH); delay(waktuPompa); digitalWrite(AIRPUMP, LOW); digitalWrite(VALVE, HIGH);
+  
+  digitalWrite(AIRPUMP, HIGH);
+  for (long i = 0; i <= waktuPompa; i++) {
+    adc0 = ads.readADC_SingleEnded(0);
+    Serial.print(micros());
+    Serial.print(",");
+    Serial.println(adc0);
+  }
 
+  digitalWrite(AIRPUMP, LOW); digitalWrite(VALVE, HIGH);
+  for (long i = 0; i <= waktuTunggu; i++) {
+    adc0 = ads.readADC_SingleEnded(0);
+    Serial.print(micros());
+    Serial.print(",");
+    Serial.println(adc0);
+  }
+  
+  
+  
+
+}
 
 
 void setup() {
@@ -171,7 +200,7 @@ void setup() {
 
   while (!Serial.available());
   x = Serial.readString().toInt();
-  
+
   if (x == 0) {
     beginMeasuring();
     kirimOximeter(2000);
@@ -181,7 +210,7 @@ void setup() {
     Serial.println("ENDMEASURE");
     endMeasuring();
   }
-  
+
   if (x == 1) {
     kirimSuhu(50);
     Serial.println("ENDMEASURE");
@@ -190,12 +219,17 @@ void setup() {
     Serial.println("ENDMEASURE");
     endMeasuring();
   }
-  
+
   if (x == 2) {
-    Serial.print("TENSI");
+    kirimTensi(1300,3500);
+    Serial.println("ENDMEASURE");
+    Serial.println("ENDMEASURE");
+    Serial.println("ENDMEASURE");
+    Serial.println("ENDMEASURE");
+    endMeasuring();
   }
-  
-  
+
+
 
 }
 
