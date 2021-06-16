@@ -16,14 +16,8 @@ class Tensimeter:
     def getResult(self):
         pulse = np.around(60/np.average(self.pulse), decimals=2)
         map = np.around(self.map[1], decimals=2)
-        sys = np.average(self.yfLP[self.systolic_index[0]:self.systolic_index[1]])
-        dys = np.average(self.yfLP[self.diastolic_index[0]:self.diastolic_index[1]])
-        
-        print('PULSE : ', pulse)
-        print('MAP : ', map)
-        print('SYS : ', sys)
-        print('DIAS : ', dys)
-        
+        sys = np.around(np.average(self.yfLP[self.systolic_index[0]:self.systolic_index[1]]), decimals=2)
+        dys = np.around(np.average(self.yfLP[self.diastolic_index[0]:self.diastolic_index[1]]), decimals=2)
         return pulse,map,sys,dys
 
     def filter(self,ymmHg):
@@ -136,8 +130,6 @@ class Tensimeter:
         #       start deflation        beatpoint                   oscilation start indx    pulse     map          systolic           diastolic      
         return [tPumpedUP,yPumpedUP], [tMaximas,yMaximas,oscMax], [oscStartInd,oscEndInd], [deltaP], [tMAP,pMAP], [startSys,endSys], [startDys,endDys]
         
-
-
     def plot(self):
         f, axes = plt.subplots(2)
         axes[0].plot(self.deflation[0], 
@@ -170,9 +162,12 @@ class Tensimeter:
         axes[1].legend(loc='upper right')
         plt.show()
 
-
 if __name__ == '__main__':
     tensimeter = Tensimeter()
-    tensimeter.getResult()
+    pulse,map,sys,dys = tensimeter.getResult()
+    print('PULSE : ',pulse)
+    print('MAP : ',map)
+    print('SYS : ',sys)
+    print('DYS : ',dys)
     tensimeter.plot()
     

@@ -539,7 +539,6 @@ class gui (QtWidgets.QDialog, Ui_Form):
                 red_prev = float(curr_data[2])
         #print('Sample Rate: {0:2.1f}Hz'.format(1.0/np.mean(np.abs(np.diff(t_vec)))))
 
-        
         ## calculate heartrate
         smoothing_size = 20 # convolution smoothing size
         samp_rate = 1/np.mean(np.diff(t_vec)) # average sample rate for determining peaks
