@@ -1,6 +1,6 @@
 from typing import Text
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QThread,pyqtSignal
+from PyQt5 import QtCore,QtWidgets
+from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
@@ -9,13 +9,15 @@ from polektor import Ui_Form
 import serial, serial.tools.list_ports
 import os,csv
 import numpy as np
-import matplotlib.pyplot as plt
 import time
 import scipy.signal
 import string,random
 import fb_config as fb
 import knn
 from datetime import datetime
+from measure_suhu import Suhu
+from measure_oximeter import Oximeter
+from measure_tensimeter import Tensimeter
 
 class ClickableLineEdit(QLineEdit):
     clicked = pyqtSignal() # signal when the text entry is left clicked
@@ -264,6 +266,7 @@ class gui (QtWidgets.QDialog, Ui_Form):
         self.enable_abjad = False
         self.enable_angka = True
 
+#### KEYBOARD FUNCTION ####
     def input_angka(self):
         if self.pos_cursor == 2:
             currenttext = self.in_nik.text()
@@ -296,7 +299,6 @@ class gui (QtWidgets.QDialog, Ui_Form):
         if self.pos_cursor == 1:
             currenttext = self.in_nama.text()
             self.in_nama.setText(currenttext + self.buff_key)
-
     def inkey_space(self):
         self.buff_key = ' '
         self.input_abjad()
@@ -411,7 +413,8 @@ class gui (QtWidgets.QDialog, Ui_Form):
     def inkey_comma(self):
         self.buff_key = '.'
         self.input_angka()
-    
+###########################
+
     def predict(self):
         kelamin = self.cb_kelamin.currentText()
         if kelamin == "PRIA" :
@@ -446,7 +449,6 @@ class gui (QtWidgets.QDialog, Ui_Form):
         except:
             self.print("DATA TIDAK LENGKAP")
         
-
     def validation(self):
         current_date = self.lbl_time.text()
         nik = self.in_nik.text()
@@ -491,158 +493,64 @@ class gui (QtWidgets.QDialog, Ui_Form):
                 splitPort=strPort.split(' ')
                 self.cb_serial.addItem(splitPort[0])
 
-    def find_spo2(self,t_vec,red_vec, ir_vec, sample):
-        frate = 0.95
-        avered = 0
-        aveir = 0
-        sumredrms = 0
-        sumirrms = 0
-        R=0
-        buff_spo2,buff_ratio=[],[]
-        for i in range(len(t_vec)):
-            avered = avered * frate + red_vec[i] * (1.0 - frate)
-            sumredrms += (red_vec[i] - avered) * (red_vec[i] - avered)        
-            aveir = aveir * frate + ir_vec[i] * (1.0 - frate)
-            sumirrms += (ir_vec[i] - aveir) * (ir_vec[i] - aveir)
-
-            if i%sample == 0:
-                R = (np.sqrt(sumredrms) / avered) / (np.sqrt(sumirrms) / aveir)
-                SpO2 = -23.3 * (R - 0.4) + 100
-                sumredrms = 0
-                sumirrms = 0
-                buff_spo2.append(SpO2)
-            buff_ratio.append(R)
-            
-        return buff_ratio,buff_spo2
-
-    def calculate_oximeter(self):
-        datafile_name = 'max30102_data.csv'
-        if os.path.isfile(datafile_name):
-            os.remove(datafile_name)
-        
-        #preprocessing data
-        t_vec,ir_vec,red_vec = [],[],[]
-        ir_prev,red_prev = 0.0,0.0
-        for ii in range(3,len(self.max30105)):
-            try:
-                curr_data = (self.max30105[ii][0:-2]).decode("utf-8").split(',')
-            except:
-                continue
-            if len(curr_data)==3:
-                if abs((float(curr_data[1])-ir_prev)/float(curr_data[1]))>1.01 or\
-                abs((float(curr_data[2])-red_prev)/float(curr_data[2]))>1.01:
-                    continue
-                t_vec.append(float(curr_data[0])/1000000.0)
-                ir_vec.append(float(curr_data[1]))
-                red_vec.append(float(curr_data[2]))
-                ir_prev = float(curr_data[1])
-                red_prev = float(curr_data[2])
-        #print('Sample Rate: {0:2.1f}Hz'.format(1.0/np.mean(np.abs(np.diff(t_vec)))))
-
-        ## calculate heartrate
-        smoothing_size = 20 # convolution smoothing size
-        samp_rate = 1/np.mean(np.diff(t_vec)) # average sample rate for determining peaks
-        y_vals = ir_vec
-        y_vals = np.convolve(y_vals,np.ones((smoothing_size,)),'same')/smoothing_size
-        y_vals = np.append(np.repeat(y_vals[int(smoothing_size/2)],int(smoothing_size/2)),y_vals[int(smoothing_size/2):-int(smoothing_size/2)])
-        y_vals = np.append(y_vals,np.repeat(y_vals[-int(smoothing_size/2)],int(smoothing_size/2)))
-        indexes, _ = scipy.signal.find_peaks(y_vals, distance=samp_rate*.5)
-        scatter_x,scatter_y = [],[]
-        for jj in indexes:
-            scatter_x.append(t_vec[jj])
-            scatter_y.append(y_vals[jj])
-        bpm = 60/np.mean(np.diff(scatter_x))
-        self.in_bpm.setText(str(bpm)[:5])
-        
-        ## calculate SPo2
-        ratio_vec,spo2_vec = self.find_spo2(t_vec=t_vec,red_vec=red_vec, ir_vec=ir_vec, sample=int(np.mean(np.diff(indexes))))
-        self.in_spo2.setText(str(np.mean(spo2_vec))[:5])
-
-        ## saving data
-        with open(datafile_name,'a') as f:
-            writer = csv.writer(f,delimiter=',')
-            for t,x,y in zip(t_vec,ir_vec,red_vec):
-                writer.writerow([t,x,y])
-
-    def calculate_suhu(self):
-        datafile_name = 'mlx90614_data.csv'
-        if os.path.isfile(datafile_name):
-            os.remove(datafile_name)
-
-        #preprocessing data
-        t_vec,suhu_vec = [],[]
-        suhu_prev = 0.0
-        for ii in range(3,len(self.mlx90614)):
-            try:
-                curr_data = (self.mlx90614[ii][0:-2]).decode("utf-8").split(',')
-            except:
-                continue
-            if len(curr_data)==2:
-                if abs((float(curr_data[1])-suhu_prev)/float(curr_data[1]))>1.01:
-                    continue
-                t_vec.append(float(curr_data[0])/1000000.0)
-                suhu_vec.append(float(curr_data[1]))
-                suhu_prev = float(curr_data[1])
-
-        #AVERAGE
-        self.in_suhu.setText(str(np.mean(suhu_vec))[:5])
-
-        ## saving data
-        with open(datafile_name,'a') as f:
-            writer = csv.writer(f,delimiter=',')
-            for t,x in zip(t_vec,suhu_vec):
-                writer.writerow([t,x])
-
-    def calculate_tensi(self):
-        datafile_name = 'adstensi_data.csv'
-        if os.path.isfile(datafile_name):
-            os.remove(datafile_name)
-
-        t_vec,tensi_vec = [],[]
-        tensi_prev = 0.0
-        for ii in range(3,len(self.adstensi)):
-            try:
-                curr_data = (self.adstensi[ii][0:-2]).decode("utf-8").split(',')
-            except:
-                continue
-            if len(curr_data)==2:
-                if abs((float(curr_data[1])-tensi_prev)/float(curr_data[1]))>1.01:
-                    continue
-                t_vec.append(float(curr_data[0])/1000000.0)
-                tensi_vec.append(float(curr_data[1]))
-                tensi_prev = float(curr_data[1])
-
-        ## saving data
-        with open(datafile_name,'a') as f:
-            writer = csv.writer(f,delimiter=',')
-            for t,x in zip(t_vec,tensi_vec):
-                writer.writerow([t,x])
-
-
-
     def measure_oxi(self):
         self.max30105 = []
         port = str(self.cb_serial.currentText())
 
         if port == "None":
             self.print("PORT IS DISCONNECTED") 
+            oxi_measure = Oximeter()
+            bpm,spo2 = oxi_measure.getResult()
+            self.in_bpm.setText(str(bpm))
+            self.in_spo2.setText(str(spo2))
         else:
+            ## READ FROM ARDUINO
             self.print("BEGIN MEASURING OXI")
-            
             arduino = serial.Serial(port=port,baudrate=115200,timeout=.1)
             time.sleep(2)
             arduino.write(bytes('0', 'utf-8'))
             time.sleep(0.05)
-
             while True:
                 curr_line = arduino.readline()
                 if curr_line[0:-2]==b'ENDMEASURE':
                     break
                 if curr_line[0:-2]!=b'':
                     self.max30105.append(curr_line)
-                
+            
+            ## CLEAR LAST DATA
+            datafile_name = 'max30102_data.csv'
+            if os.path.isfile(datafile_name):
+                os.remove(datafile_name)
 
-            self.calculate_oximeter()
+            ## PREPROCESSING DATA
+            t_vec,ir_vec,red_vec = [],[],[]
+            ir_prev,red_prev = 0.0,0.0
+            for ii in range(3,len(self.max30105)):
+                try:
+                    curr_data = (self.max30105[ii][0:-2]).decode("utf-8").split(',')
+                except:
+                    continue
+                if len(curr_data)==3:
+                    if abs((float(curr_data[1])-ir_prev)/float(curr_data[1]))>1.01 or\
+                    abs((float(curr_data[2])-red_prev)/float(curr_data[2]))>1.01:
+                        continue
+                    t_vec.append(float(curr_data[0])/1000000.0)
+                    ir_vec.append(float(curr_data[1]))
+                    red_vec.append(float(curr_data[2]))
+                    ir_prev = float(curr_data[1])
+                    red_prev = float(curr_data[2])
+            
+            ## SAVE TO CSV
+            with open(datafile_name,'a') as f:
+                writer = csv.writer(f,delimiter=',')
+                for t,x,y in zip(t_vec,ir_vec,red_vec):
+                    writer.writerow([t,x,y])
+
+            ## CALCULATING
+            oxi_measure = Oximeter()
+            bpm,spo2 = oxi_measure.getResult()
+            self.in_bpm.setText(str(bpm))
+            self.in_spo2.setText(str(spo2))
             self.print("MEASURING OXI DONE")
 
     def measure_suhu(self):
@@ -650,23 +558,52 @@ class gui (QtWidgets.QDialog, Ui_Form):
         port = str(self.cb_serial.currentText())
 
         if port == "None":
-            self.print("PORT IS DISCONNECTED") 
+            self.print("PORT IS DISCONNECTED")
+            suhu_measure = Suhu()
+            self.in_suhu.setText(str(suhu_measure.getResult()))
         else:
+            ## READ FROM ARDUINO
             self.print("BEGIN MEASURING SUHU")
-            
             arduino = serial.Serial(port=port,baudrate=115200,timeout=.1)
             time.sleep(2)
             arduino.write(bytes('1', 'utf-8'))
             time.sleep(0.05)
-
             while True:
                 curr_line = arduino.readline()
                 if curr_line[0:-2]==b'ENDMEASURE':
                     break
                 if curr_line[0:-2]!=b'':
                     self.mlx90614.append(curr_line)
-                
-            self.calculate_suhu()
+            
+            ## CLEAR LAST DATA
+            datafile_name = 'mlx90614_data.csv'
+            if os.path.isfile(datafile_name):
+                os.remove(datafile_name)
+
+            ## PREPROCESSING DATA
+            t_vec,suhu_vec = [],[]
+            suhu_prev = 0.0
+            for ii in range(3,len(self.mlx90614)):
+                try:
+                    curr_data = (self.mlx90614[ii][0:-2]).decode("utf-8").split(',')
+                except:
+                    continue
+                if len(curr_data)==2:
+                    if abs((float(curr_data[1])-suhu_prev)/float(curr_data[1]))>1.01:
+                        continue
+                    t_vec.append(float(curr_data[0])/1000000.0)
+                    suhu_vec.append(float(curr_data[1]))
+                    suhu_prev = float(curr_data[1])
+
+            ## SAVE TO CSV
+            with open(datafile_name,'a') as f:
+                writer = csv.writer(f,delimiter=',')
+                for t,x in zip(t_vec,suhu_vec):
+                    writer.writerow([t,x])
+
+            ## CALCULATE
+            suhu_measure = Suhu()
+            self.in_suhu.setText(str(suhu_measure.getResult()))
             self.print("MEASURING SUHU DONE")
                 
     def measure_tensi(self):
@@ -675,63 +612,56 @@ class gui (QtWidgets.QDialog, Ui_Form):
 
         if port == "None":
             self.print("PORT IS DISCONNECTED") 
+            tensi_measure = Tensimeter()
+            pulse,map,sys,dys = tensi_measure.getResult()
+            self.in_sys.setText(str(sys))
+            self.in_dias.setText(str(dys))
         else:
             self.print("BEGIN MEASURING TENSI")
-            
             arduino = serial.Serial(port=port,baudrate=115200,timeout=.1)
             time.sleep(2)
             arduino.write(bytes('2', 'utf-8'))
             time.sleep(0.05)
-
             while True:
                 curr_line = arduino.readline()
                 if curr_line[0:-2]==b'ENDMEASURE':
                     break
                 if curr_line[0:-2]!=b'':
                     self.adstensi.append(curr_line)
-                    print(curr_line)
-                
-            self.calculate_tensi()
-            self.print("MEASURING TENSI DONE")
-    
-
-
-
-    def measure(self):
-        port = str(self.cb_serial.currentText())
-        if port == "None":
-            self.print("PORT IS DISCONNECTED") 
-        else:
-            self.print("BEGIN MEASURING") 
-            ser = serial.Serial(port,baudrate=115200)
-            self.start_word = False
-            self.max30105 = []
-            self.mpx90614 = []
-            while True:
-                curr_line = ser.readline()
-                if self.start_word == False:
-                    if curr_line[0:-2]==b'MAX30102':
-                        self.start_word = "MAX30102"
-                        continue
-
-                    elif curr_line[0:-2]==b'MLX90614':
-                        self.start_word = "MLX90614"
-                        continue
-                    
-                    else :
-                        continue
-                if curr_line[0:-2]==b'END':
-                    self.start_word = False 
-                if curr_line[0:-2]==b'ENDMEASURE':
-                    break
-                if self.start_word == "MAX30102":
-                    self.max30105.append(curr_line)
-                if self.start_word == "MLX90614":
-                    self.mlx90614.append(curr_line)
-
-            self.calculate_oximeter()
-            self.calculate_suhu()
             
+            ## CLEAR LAST DATA
+            datafile_name = 'adstensi_data.csv'
+            if os.path.isfile(datafile_name):
+                os.remove(datafile_name)
+            
+            ## PREPROCESSING DATA
+            t_vec,tensi_vec = [],[]
+            tensi_prev = 0.0
+            for ii in range(3,len(self.adstensi)):
+                try:
+                    curr_data = (self.adstensi[ii][0:-2]).decode("utf-8").split(',')
+                except:
+                    continue
+                if len(curr_data)==2:
+                    if abs((float(curr_data[1])-tensi_prev)/float(curr_data[1]))>1.01:
+                        continue
+                    t_vec.append(float(curr_data[0])/1000000.0)
+                    tensi_vec.append(float(curr_data[1]))
+                    tensi_prev = float(curr_data[1])
+
+            ## SAVE TO CSV
+            with open(datafile_name,'a') as f:
+                writer = csv.writer(f,delimiter=',')
+                for t,x in zip(t_vec,tensi_vec):
+                    writer.writerow([t,x])
+
+            ## CALCULATE
+            tensi_measure = Tensimeter()
+            pulse,map,sys,dys = tensi_measure.getResult()
+            self.in_sys.setText(str(sys))
+            self.in_dias.setText(str(dys))
+            self.print("MEASURING TENSI DONE")
+              
 if __name__=='__main__':
     import sys
     app = QtWidgets.QApplication(sys.argv)

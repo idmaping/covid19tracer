@@ -13,12 +13,11 @@ MAX30105 particleSensor;
 #include <Adafruit_ADS1X15.h>
 Adafruit_ADS1115 ads;
 
-int16_t adc0;
 bool logicLed = LOW;
 int x;
 
 Adafruit_MLX90614 mlx = Adafruit_MLX90614();
-double regress(double x) {
+double regress_suhu(double x) {
   double terms[] = {
     -8.5651165052019118e+004,
     6.2318407642005332e+003,
@@ -56,6 +55,24 @@ double regress(double x) {
   return r;
 }
 
+double regress_tensi(double x) {
+  double terms[] = {
+    -8.5027361834166072e+002,
+     3.6954475029976126e-002,
+     1.2921190561479608e-007
+};
+  
+  size_t csz = sizeof terms / sizeof *terms;
+  
+  double t = 1;
+  double r = 0;
+  for (int i = 0; i < csz;i++) {
+    r += terms[i] * t;
+    t *= x;
+  }
+  return r;
+}
+
 void beginMeasuring() {
   for (int i = 0; i < 10; i++) {
     digitalWrite(LED_R, LOW); delay(50);
@@ -63,6 +80,7 @@ void beginMeasuring() {
   }
   digitalWrite(LED_R, HIGH);
 }
+
 void endMeasuring() {
   digitalWrite(LED_R, LOW);
   for (int i = 0; i < 10; i++) {
@@ -71,24 +89,7 @@ void endMeasuring() {
   }
 }
 
-void kirimDummyOximeter(long waktuKirim) {
-  Serial.println("");
-  Serial.println("MAX30102");
-  delay(100);
-
-  for (long i = 0; i <= waktuKirim; i++) {
-    Serial.print(micros());
-    Serial.print(",");
-    Serial.print(i);
-    Serial.print(",");
-    Serial.println(123);
-    digitalWrite(LED_R, !logicLed);
-    logicLed = !logicLed;
-    delay(500);
-  }
-}
 void kirimOximeter(long waktuKirim) {
-
   //MAX30102===================================================================================
   while (!particleSensor.begin(Wire, I2C_SPEED_FAST)) {
     Serial.println("MAX30102 was not found");
@@ -125,22 +126,7 @@ void kirimOximeter(long waktuKirim) {
 #endif
   }
 }
-void kirimDummySuhu(long waktuKirim) {
-  Serial.println("");
-  Serial.println("MLX90614");
-  delay(100);
 
-  for (long i = 0; i <= waktuKirim; i++) {
-    Serial.print(micros());
-    Serial.print(",");
-    Serial.print(i);
-    Serial.print(",");
-    Serial.println(789);
-    digitalWrite(LED_R, !logicLed);
-    logicLed = !logicLed;
-    delay(500);
-  }
-}
 void kirimSuhu(long waktuKirim) {
   mlx.begin();
   //Serial.println("");
@@ -149,7 +135,7 @@ void kirimSuhu(long waktuKirim) {
 
   for (long i = 0; i <= waktuKirim; i++) {
     float suhuSurface = mlx.readObjectTempC();
-    float suhuBody = regress(suhuSurface);
+    float suhuBody = regress_suhu(suhuSurface);
     Serial.print(micros());
     Serial.print(",");
     Serial.println(suhuBody);
@@ -158,6 +144,7 @@ void kirimSuhu(long waktuKirim) {
     delay(200);
   }
 }
+
 void kirimTensi(long waktuPompa, long waktuTunggu) {
   beginMeasuring();
   ads.begin();
@@ -166,25 +153,22 @@ void kirimTensi(long waktuPompa, long waktuTunggu) {
   
   digitalWrite(AIRPUMP, HIGH);
   for (long i = 0; i <= waktuPompa; i++) {
-    adc0 = ads.readADC_SingleEnded(0);
+    float raw = ads.readADC_SingleEnded(0);
+    double regres_raw = regress_tensi(raw);
     Serial.print(micros());
     Serial.print(",");
-    Serial.println(adc0);
+    Serial.println(raw);
   }
 
   digitalWrite(AIRPUMP, LOW); digitalWrite(VALVE, HIGH);
   for (long i = 0; i <= waktuTunggu; i++) {
-    adc0 = ads.readADC_SingleEnded(0);
+    float raw = ads.readADC_SingleEnded(0);
+    double regres_raw = regress_tensi(raw);
     Serial.print(micros());
     Serial.print(",");
-    Serial.println(adc0);
+    Serial.println(raw);
   }
-  
-  
-  
-
 }
-
 
 void setup() {
   pinMode(AIRPUMP, OUTPUT);
@@ -203,7 +187,7 @@ void setup() {
 
   if (x == 0) {
     beginMeasuring();
-    kirimOximeter(2000);
+    kirimOximeter(1500);
     Serial.println("ENDMEASURE");
     Serial.println("ENDMEASURE");
     Serial.println("ENDMEASURE");
@@ -228,9 +212,6 @@ void setup() {
     Serial.println("ENDMEASURE");
     endMeasuring();
   }
-
-
-
 }
 
 void loop() {
