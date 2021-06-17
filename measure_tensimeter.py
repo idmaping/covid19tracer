@@ -16,7 +16,7 @@ class Tensimeter:
 
     def measure(self,t,ymmHg):
         ## FILTER
-        fs = 150
+        fs = 100
         ### 5 Hz LP filter
         f5 = 5
         bLP, aLP = signal.butter(4, f5/fs*2, 'lowpass')
@@ -55,11 +55,11 @@ class Tensimeter:
                 if np.abs(delta2T[i]) < 0.2 and i > (xPumpedUp) :
                     validCnt += 1
                     if validCnt == 5 :
-                        oscStartInd = i - (validCnt-1)
+                        oscStartInd = i - (validCnt) #-1)
                 else:
                     validCnt = 0
             elif oscEndInd == 0: 
-                if oscMax[i] < (oscMax[oscStartInd]*0.5) : # more info on left side
+                if oscMax[i] < (oscMax[oscStartInd]*0.5) : 
                     oscEndInd = i -1
         if oscEndInd == 0:
             oscEndInd = len(tMaximas)-4
@@ -98,20 +98,25 @@ class Tensimeter:
         #print("Pulse: ", np.around(pulse, decimals=1))
 
         ## FINDING MAP USING MAX POINT ONLY
-        MAPIndex = np.argmax(oscMaxP)
+        #MAPIndex = np.argmax(oscMaxP)
+        MAPIndex = np.argmax(dMaxMin)
+        
         ### FINDING SYSTOLIC
+        SYSIndex = 0
         searchSys = np.max(oscMaxP)*0.55 #Ratio Sys
-        for i in range(len(oscMaxP)):
+        for i in range(MAPIndex):
             if oscMaxP[i] <= searchSys:
                 SYSIndex = i
                 break
+        
         ### FINDING DIASTOLIC
-        searchDis = np.max(oscMaxP)*0.70 #Ratio Dys
+        DYSIndex = 0
+        searchDis = np.max(oscMaxP)*0.9 #Ratio Dys
         for i in range(MAPIndex+1,len(oscMaxP)):
             if oscMaxP[i] <= searchDis:
-                DYSIndex = i
+                DYSIndex = i-1
                 break        
-
+        
         '''
         ### FINDING MAP USING MIN MAX POINT
         argMax = np.argmax(dMaxMin)
@@ -157,7 +162,7 @@ class Tensimeter:
     def normalize(self, arr, t_min, t_max):
         norm_arr = []
         for i in arr:
-            temp = (i-t_min)/(t_max - t_min) *160
+            temp = (i-t_min)/(t_max - t_min) *170
             norm_arr.append(temp)
         return norm_arr
 

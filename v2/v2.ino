@@ -58,15 +58,15 @@ double regress_suhu(double x) {
 double regress_tensi(double x) {
   double terms[] = {
     -8.5027361834166072e+002,
-     3.6954475029976126e-002,
-     1.2921190561479608e-007
-};
-  
-  size_t csz = sizeof terms / sizeof *terms;
-  
+    3.6954475029976126e-002,
+    1.2921190561479608e-007
+  };
+
+  size_t csz = sizeof terms / sizeof * terms;
+
   double t = 1;
   double r = 0;
-  for (int i = 0; i < csz;i++) {
+  for (int i = 0; i < csz; i++) {
     r += terms[i] * t;
     t *= x;
   }
@@ -148,26 +148,50 @@ void kirimSuhu(long waktuKirim) {
 void kirimTensi(long waktuPompa, long waktuTunggu) {
   beginMeasuring();
   ads.begin();
+
   digitalWrite(VALVE, HIGH); delay(3000); digitalWrite(VALVE, LOW);
   //digitalWrite(AIRPUMP, HIGH); delay(waktuPompa); digitalWrite(AIRPUMP, LOW); digitalWrite(VALVE, HIGH);
-  
-  digitalWrite(AIRPUMP, HIGH);
-  for (long i = 0; i <= waktuPompa; i++) {
+  /*
+    digitalWrite(AIRPUMP, HIGH);
+    for (long i = 0; i <= waktuPompa; i++) {
     float raw = ads.readADC_SingleEnded(0);
     double regres_raw = regress_tensi(raw);
     Serial.print(micros());
     Serial.print(",");
     Serial.println(raw);
-  }
+    }
 
-  digitalWrite(AIRPUMP, LOW); digitalWrite(VALVE, HIGH);
-  for (long i = 0; i <= waktuTunggu; i++) {
+    digitalWrite(AIRPUMP, LOW); digitalWrite(VALVE, HIGH);
+    for (long i = 0; i <= waktuTunggu; i++) {
     float raw = ads.readADC_SingleEnded(0);
     double regres_raw = regress_tensi(raw);
     Serial.print(micros());
     Serial.print(",");
     Serial.println(raw);
-  }
+    }
+
+  */
+  float raw = 0;
+  do {
+    digitalWrite(AIRPUMP, HIGH); digitalWrite(VALVE, LOW);
+    raw = ads.readADC_SingleEnded(0);
+    Serial.print(micros());
+    Serial.print(",");
+    Serial.println(raw);
+  } while (raw < 25061);
+  
+  
+  do {
+    digitalWrite(AIRPUMP, LOW); digitalWrite(VALVE, HIGH);
+    raw = ads.readADC_SingleEnded(0);
+    Serial.print(micros());
+    Serial.print(",");
+    Serial.println(raw);
+  } while (raw > 22000);
+
+
+
+
 }
 
 void setup() {
@@ -205,7 +229,7 @@ void setup() {
   }
 
   if (x == 2) {
-    kirimTensi(1300,3500);
+    kirimTensi(1300, 3500);
     Serial.println("ENDMEASURE");
     Serial.println("ENDMEASURE");
     Serial.println("ENDMEASURE");

@@ -54,12 +54,13 @@ class Tensimeter:
             if oscStartInd == 0 :
                 if np.abs(delta2T[i]) < 0.2 and i > (xPumpedUp) :
                     validCnt += 1
+                    print(validCnt,delta2T[i],i)
                     if validCnt == 5 :
-                        oscStartInd = i - (validCnt-1)
+                        oscStartInd = i - (validCnt) #-1)
                 else:
                     validCnt = 0
             elif oscEndInd == 0: 
-                if oscMax[i] < (oscMax[oscStartInd]*0.5) : # more info on left side
+                if oscMax[i] < (oscMax[oscStartInd]*0.5) : 
                     oscEndInd = i -1
         if oscEndInd == 0:
             oscEndInd = len(tMaximas)-4
@@ -106,12 +107,12 @@ class Tensimeter:
                 SYSIndex = i
                 break
         ### FINDING DIASTOLIC
-        searchDis = np.max(oscMaxP)*0.70 #Ratio Dys
+        searchDis = np.max(oscMaxP)*0.7 #Ratio Dys
         for i in range(MAPIndex+1,len(oscMaxP)):
             if oscMaxP[i] <= searchDis:
                 DYSIndex = i
                 break        
-
+        
         '''
         ### FINDING MAP USING MIN MAX POINT
         argMax = np.argmax(dMaxMin)
