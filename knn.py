@@ -34,7 +34,7 @@ class knn:
         self.kNearest.train(self.measure, cv2.ml.ROW_SAMPLE, self.kelas)
 
 
-    def predict(self,umur=20,jenis_kelamin=ord("L"),suhu=36,spo2=95,detak_jantung=70,systole=100,diastole=80,k=5):
+    def predict(self,umur=20,jenis_kelamin=ord("L"),suhu=36,spo2=95,detak_jantung=70,systole=120,diastole=60,k=5):
         in_measure = [[umur,jenis_kelamin,suhu,spo2,detak_jantung,systole,diastole]]
         in_measure = np.float32(in_measure)
         retval, results, neigh_resp, dists = self.kNearest.findNearest(in_measure, k = k)              
@@ -43,7 +43,12 @@ class knn:
 
 if __name__=="__main__":
     knn = knn()
-    knn.generate_dataset(file='datasetRST.csv')
+    
+    #knn.generate_dataset(file='datasetRST.csv') #UNTUK DATASET RST
+    knn.generate_dataset() #UNTUK DUMMY RST
+    
+    
+    
     #knn.initialize()
     #retval, result, neigh_resp, dists = knn.predict()
     

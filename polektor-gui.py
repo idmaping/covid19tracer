@@ -429,15 +429,16 @@ class gui (QtWidgets.QDialog, Ui_Form):
         sys = self.in_sys.text()
         dias = self.in_dias.text()
         
-        print(umur,kelamin,suhu,spo2,bpm,sys,dias)
+        #print(umur,kelamin,suhu,spo2,bpm,sys,dias)
         try:
-            retval, result, neigh_resp, dists = self.knn.predict(umur=umur,
-                                                                jenis_kelamin=kelamin,
+            retval, result, neigh_resp, dists = self.knn.predict(
+                                                                #umur=umur,
+                                                                #jenis_kelamin=kelamin,
                                                                 suhu=suhu,
-                                                                detak_jantung=bpm,
+                                                                #detak_jantung=bpm,
                                                                 spo2=spo2,
-                                                                systole=sys,
-                                                                diastole=dias,
+                                                                #systole=sys,
+                                                                #diastole=dias,
                                                                 k=5)
             print(retval, result, neigh_resp, dists)
             if result == 'N':
