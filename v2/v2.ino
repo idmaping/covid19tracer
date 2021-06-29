@@ -135,10 +135,12 @@ void kirimSuhu(long waktuKirim) {
 
   for (long i = 0; i <= waktuKirim; i++) {
     float suhuSurface = mlx.readObjectTempC();
-    float suhuBody = regress_suhu(suhuSurface);
+    //float suhuBody = regress_suhu(suhuSurface);
     Serial.print(micros());
     Serial.print(",");
-    Serial.println(suhuBody);
+    Serial.println(suhuSurface); //Serial.println(suhuBody);
+    
+    
     digitalWrite(LED_R, !logicLed);
     logicLed = !logicLed;
     delay(200);
@@ -178,7 +180,7 @@ void kirimTensi(long waktuPompa, long waktuTunggu) {
     Serial.print(micros());
     Serial.print(",");
     Serial.println(raw);
-  } while (raw < 25061);
+  } while (raw < 24661);//25061);
   
   
   do {

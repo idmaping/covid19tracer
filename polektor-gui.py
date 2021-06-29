@@ -153,6 +153,7 @@ class gui (QtWidgets.QDialog, Ui_Form):
         self.in_bpm.setText("")
         self.in_spo2.setText("")
         self.lbl_kategori.setText("-")
+        self.lbl_pw.setText("-")
 
     def handle_inkey_enter(self):
         self.pos_cursor = 0
@@ -464,19 +465,23 @@ class gui (QtWidgets.QDialog, Ui_Form):
         berlaku = self.cb_masaberlaku.currentText()[:1]
         pw = self.lbl_pw.text()
 
-        datafile_name = 'foo.csv'
-        if os.path.isfile(datafile_name):
-            os.remove(datafile_name)
+        if nik == '' or nama == '' or umur == '' or suhu == '' or bpm == '' or spo2 == '' or self.in_sys.text() == '' or self.in_dias.text() == '':
+            self.print("PUBLISH FAILED, DATA EMPTY")
+        else :
+            datafile_name = 'foo.csv'
+            if os.path.isfile(datafile_name):
+                os.remove(datafile_name)
 
-        a = np.array([[current_date,nik,nama,kelamin,umur,suhu,tensi,bpm,spo2,berlaku,kategori]])
-        
-        with open('foo.csv', 'a') as file:
-            mywriter = csv.writer(file, delimiter=',')
-            mywriter.writerows(a)
+            a = np.array([[current_date,nik,nama,kelamin,umur,suhu,tensi,bpm,spo2,berlaku,kategori]])
+            
+            with open('foo.csv', 'a') as file:
+                mywriter = csv.writer(file, delimiter=',')
+                mywriter.writerows(a)
 
-        path_on_cloud = "result/" + nik + "_" + pw + ".csv"
-        fb.publish(path_on_cloud=path_on_cloud,path_local="foo.csv")
-        self.print("PUBLISH DONE")
+            path_on_cloud = "result/" + nik + "_" + pw + ".csv"
+            fb.publish(path_on_cloud=path_on_cloud,path_local="foo.csv")
+            self.print("PUBLISH DONE")
+
 
     def generate(self):
         def pw_generator(size=6, chars=string.ascii_uppercase + string.digits):

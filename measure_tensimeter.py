@@ -162,7 +162,7 @@ class Tensimeter:
     def normalize(self, arr, t_min, t_max):
         norm_arr = []
         for i in arr:
-            temp = (i-t_min)/(t_max - t_min) *170
+            temp = (i-t_min)/(t_max - t_min) *145 #170
             norm_arr.append(temp)
         return norm_arr
 
