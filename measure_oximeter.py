@@ -22,14 +22,15 @@ class Oximeter:
         R=0
         buff_spo2,buff_ratio=[],[]
         for i in range(len(self.t)):
-            avered = avered * frate + self.red[i] * (1.0 - frate)
-            sumredrms += (self.red[i] - avered) * (self.red[i] - avered)        
-            aveir = aveir * frate + self.ir[i] * (1.0 - frate)
-            sumirrms += (self.ir[i] - aveir) * (self.ir[i] - aveir)
+            avered = avered * frate + self.red[i] * (1.0 - frate) #ATAS RED
+            sumredrms += (self.red[i] - avered) * (self.red[i] - avered) #BAWAH RED     
+            
+            aveir = aveir * frate + self.ir[i] * (1.0 - frate) #ATAS IR
+            sumirrms += (self.ir[i] - aveir) * (self.ir[i] - aveir) #BAWAH ir
 
             if i%int(np.mean(np.diff(self.indexes))) == 0:
-                R = (np.sqrt(sumredrms) / avered) / (np.sqrt(sumirrms) / aveir)
-                self.SpO2 = -23.3 * (R - 0.4) + 100
+                R = (np.sqrt(sumredrms) / avered) / (np.sqrt(sumirrms) / aveir) #MENCARI JARAK 
+                self.SpO2 = -23.3 * (R - 0.4) + 100 #kalibrasi
                 sumredrms = 0
                 sumirrms = 0
                 buff_spo2.append(self.SpO2)
@@ -41,7 +42,7 @@ class Oximeter:
         
 
     def heartrate(self):
-        smoothing_size = 20 
+        smoothing_size = 20
         samp_rate = 1/np.mean(np.diff(self.t)) 
         self.y_vals = self.ir
         self.y_vals = np.convolve(self.y_vals,np.ones((smoothing_size,)),'same')/smoothing_size

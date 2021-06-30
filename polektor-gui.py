@@ -482,7 +482,6 @@ class gui (QtWidgets.QDialog, Ui_Form):
             fb.publish(path_on_cloud=path_on_cloud,path_local="foo.csv")
             self.print("PUBLISH DONE")
 
-
     def generate(self):
         def pw_generator(size=6, chars=string.ascii_uppercase + string.digits):
             return ''.join(random.choice(chars) for _ in range(size))
@@ -514,7 +513,7 @@ class gui (QtWidgets.QDialog, Ui_Form):
             self.print("BEGIN MEASURING OXI")
             arduino = serial.Serial(port=port,baudrate=115200,timeout=.1)
             time.sleep(2)
-            arduino.write(bytes('0', 'utf-8'))
+            arduino.write(bytes('0', 'utf-8')) #KIRIM KE ARDUINO 0
             time.sleep(0.05)
             while True:
                 curr_line = arduino.readline()
@@ -572,7 +571,7 @@ class gui (QtWidgets.QDialog, Ui_Form):
             self.print("BEGIN MEASURING SUHU")
             arduino = serial.Serial(port=port,baudrate=115200,timeout=.1)
             time.sleep(2)
-            arduino.write(bytes('1', 'utf-8'))
+            arduino.write(bytes('1', 'utf-8')) #NGIRIM SINYAL KE ARDUINO
             time.sleep(0.05)
             while True:
                 curr_line = arduino.readline()
@@ -662,11 +661,14 @@ class gui (QtWidgets.QDialog, Ui_Form):
                     writer.writerow([t,x])
 
             ## CALCULATE
-            tensi_measure = Tensimeter()
-            pulse,map,sys,dys = tensi_measure.getResult()
-            self.in_sys.setText(str(sys))
-            self.in_dias.setText(str(dys))
-            self.print("MEASURING TENSI DONE")
+            try:
+                tensi_measure = Tensimeter()
+                pulse,map,sys,dys = tensi_measure.getResult()
+                self.in_sys.setText(str(sys))
+                self.in_dias.setText(str(dys))
+                self.print("MEASURING TENSI DONE")
+            except:
+                self.print("MEASURING TENSI FAILED")
               
 if __name__=='__main__':
     import sys

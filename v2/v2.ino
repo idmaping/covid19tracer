@@ -140,7 +140,6 @@ void kirimSuhu(long waktuKirim) {
     Serial.print(",");
     Serial.println(suhuSurface); //Serial.println(suhuBody);
     
-    
     digitalWrite(LED_R, !logicLed);
     logicLed = !logicLed;
     delay(200);
@@ -180,7 +179,7 @@ void kirimTensi(long waktuPompa, long waktuTunggu) {
     Serial.print(micros());
     Serial.print(",");
     Serial.println(raw);
-  } while (raw < 24661);//25061);
+  } while (raw < 25000);//25061);
   
   
   do {
@@ -190,6 +189,8 @@ void kirimTensi(long waktuPompa, long waktuTunggu) {
     Serial.print(",");
     Serial.println(raw);
   } while (raw > 22000);
+
+  digitalWrite(AIRPUMP, LOW); digitalWrite(VALVE, LOW);
 
 
 

@@ -103,15 +103,15 @@ class Tensimeter:
         
         ### FINDING SYSTOLIC
         SYSIndex = 0
-        searchSys = np.max(oscMaxP)*0.55 #Ratio Sys
-        for i in range(MAPIndex):
+        searchSys = np.max(oscMaxP)*0.5 #Ratio Sys
+        for i in range(MAPIndex,0,-1):
             if oscMaxP[i] <= searchSys:
                 SYSIndex = i
                 break
         
         ### FINDING DIASTOLIC
         DYSIndex = 0
-        searchDis = np.max(oscMaxP)*0.9 #Ratio Dys
+        searchDis = np.max(oscMaxP)*0.7 #0.9Ratio Dys
         for i in range(MAPIndex+1,len(oscMaxP)):
             if oscMaxP[i] <= searchDis:
                 DYSIndex = i-1
@@ -162,7 +162,7 @@ class Tensimeter:
     def normalize(self, arr, t_min, t_max):
         norm_arr = []
         for i in arr:
-            temp = (i-t_min)/(t_max - t_min) *145 #170
+            temp = (i-t_min)/(t_max - t_min) *170 #170
             norm_arr.append(temp)
         return norm_arr
 
