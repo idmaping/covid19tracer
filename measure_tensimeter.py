@@ -9,7 +9,7 @@ class Tensimeter:
         self.data = genfromtxt('adstensi_data.csv', delimiter=',')
         self.t = self.data[:,0] 
         self.ymmHg = self.normalize(arr = self.data[:,1], #Kalibrasi Manual TODO:COBA CARI DENGAN KALIBRASI DENGAN ALAT UKUR
-                                   t_min = np.min(self.data[:,1]),
+                                   t_min = 21200,#np.min(self.data[:,1]),
                                    t_max = np.max(self.data[:,1]))
         #self.ymmHg = self.data[:,1]
         self.measure(self.t,self.ymmHg)
@@ -103,7 +103,7 @@ class Tensimeter:
         
         ### FINDING SYSTOLIC
         SYSIndex = 0
-        searchSys = np.max(oscMaxP)*0.5 #Ratio Sys
+        searchSys = np.max(oscMaxP)*0.3 #Ratio Sys
         for i in range(MAPIndex,0,-1):
             if oscMaxP[i] <= searchSys:
                 SYSIndex = i

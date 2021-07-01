@@ -444,8 +444,12 @@ class gui (QtWidgets.QDialog, Ui_Form):
             print(retval, result, neigh_resp, dists)
             if result == 'N':
                 self.lbl_kategori.setText("NEGATIF")
+                self.lbl_kategori.setStyleSheet("color: yellow;")
+
             elif result == 'P':
                 self.lbl_kategori.setText("POSITIF")
+                self.lbl_kategori.setStyleSheet("color: red;")
+                
             self.print("DONE PREDICT")
             
         except:

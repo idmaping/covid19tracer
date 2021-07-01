@@ -188,7 +188,7 @@ void kirimTensi(long waktuPompa, long waktuTunggu) {
     Serial.print(micros());
     Serial.print(",");
     Serial.println(raw);
-  } while (raw > 22000);
+  } while (raw > 21500);
 
   digitalWrite(AIRPUMP, LOW); digitalWrite(VALVE, LOW);
 
