@@ -161,9 +161,10 @@ void kirimTensi(long waktuPompa, long waktuTunggu) {
     Serial.print(",");
     Serial.println(raw);
     }
-
+  */
+  
     digitalWrite(AIRPUMP, LOW); digitalWrite(VALVE, HIGH);
-    for (long i = 0; i <= waktuTunggu; i++) {
+    for (long i = 0; i <= waktuPompa; i++) {
     float raw = ads.readADC_SingleEnded(0);
     double regres_raw = regress_tensi(raw);
     Serial.print(micros());
@@ -171,7 +172,9 @@ void kirimTensi(long waktuPompa, long waktuTunggu) {
     Serial.println(raw);
     }
 
-  */
+  
+
+
   float raw = 0;
   do {
     digitalWrite(AIRPUMP, HIGH); digitalWrite(VALVE, LOW);
@@ -179,7 +182,7 @@ void kirimTensi(long waktuPompa, long waktuTunggu) {
     Serial.print(micros());
     Serial.print(",");
     Serial.println(raw);
-  } while (raw < 25000);//25061);
+  } while (raw < 24600);//25000);
   
   
   do {
@@ -232,7 +235,7 @@ void setup() {
   }
 
   if (x == 2) {
-    kirimTensi(1300, 3500);
+    kirimTensi(500, 3500);
     Serial.println("ENDMEASURE");
     Serial.println("ENDMEASURE");
     Serial.println("ENDMEASURE");

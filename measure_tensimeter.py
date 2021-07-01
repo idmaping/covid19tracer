@@ -6,10 +6,11 @@ from scipy.interpolate import interp1d
 
 class Tensimeter:
     def __init__(self):
+        self.titik_puncak = 170
         self.data = genfromtxt('adstensi_data.csv', delimiter=',')
         self.t = self.data[:,0] 
         self.ymmHg = self.normalize(arr = self.data[:,1], #Kalibrasi Manual TODO:COBA CARI DENGAN KALIBRASI DENGAN ALAT UKUR
-                                   t_min = 21200,#np.min(self.data[:,1]),
+                                   t_min = np.min(self.data[:,1]), #20100
                                    t_max = np.max(self.data[:,1]))
         #self.ymmHg = self.data[:,1]
         self.measure(self.t,self.ymmHg)
@@ -55,7 +56,7 @@ class Tensimeter:
                 if np.abs(delta2T[i]) < 0.2 and i > (xPumpedUp) :
                     validCnt += 1
                     if validCnt == 5 :
-                        oscStartInd = i - (validCnt) #-1)
+                        oscStartInd = i - (validCnt-1)#) #-1)
                 else:
                     validCnt = 0
             elif oscEndInd == 0: 
@@ -162,7 +163,7 @@ class Tensimeter:
     def normalize(self, arr, t_min, t_max):
         norm_arr = []
         for i in arr:
-            temp = (i-t_min)/(t_max - t_min) *170 #170
+            temp = (i-t_min)/(t_max - t_min) * self.titik_puncak
             norm_arr.append(temp)
         return norm_arr
 

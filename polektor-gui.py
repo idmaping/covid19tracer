@@ -637,6 +637,7 @@ class gui (QtWidgets.QDialog, Ui_Form):
                     break
                 if curr_line[0:-2]!=b'':
                     self.adstensi.append(curr_line)
+                    
             
             ## CLEAR LAST DATA
             datafile_name = 'adstensi_data.csv'
