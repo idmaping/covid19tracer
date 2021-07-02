@@ -52,7 +52,6 @@ class gui (QtWidgets.QDialog, Ui_Form):
         self.btn_validation.clicked.connect(self.validation)
         self.btn_predict.clicked.connect(self.predict)
         self.btn_reset.clicked.connect(self.reset_data)
-        
 
         #KNN
         self.knn = knn.knn()

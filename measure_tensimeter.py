@@ -114,7 +114,7 @@ class Tensimeter:
                 break
         
         ### FINDING DIASTOLIC
-        DYSIndex = 0
+        DYSIndex = MAPIndex
         searchDis = np.max(oscMaxP)*0.7 #0.9Ratio Dys
         for i in range(MAPIndex+1,len(oscMaxP)):
             if oscMaxP[i] <= searchDis:

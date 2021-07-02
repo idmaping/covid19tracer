@@ -146,30 +146,30 @@ void kirimSuhu(long waktuKirim) {
   }
 }
 
-void kirimTensi(long waktuPompa, long waktuTunggu) {
+void kirimTensi(long waktuPompa) {
   beginMeasuring();
   ads.begin();
-
-  float rawArray[waktuPompa];
+  //digitalWrite(AIRPUMP, LOW); digitalWrite(VALVE, HIGH);delay(3000);
   
-  digitalWrite(AIRPUMP, LOW); digitalWrite(VALVE, HIGH);
+  unsigned int rawArray[waktuPompa];
+  
+  digitalWrite(AIRPUMP, LOW); digitalWrite(VALVE, HIGH);delay(1000);
   for (int i = 0; i <= waktuPompa; i++) {
-    float raw = ads.readADC_SingleEnded(0);
-    rawArray[i]=ads.readADC_SingleEnded(0); 
+    unsigned int raw = ads.readADC_SingleEnded(0);
+    rawArray[i]=raw; 
     Serial.print(micros());
     Serial.print(",");
     Serial.println(raw);
   }
 
+  
   float avgTitikBawah = 0;
-  for (int i=0; i<= waktuPompa; i++){
+  for (int i=0; i< waktuPompa; i++){
     avgTitikBawah += rawArray[i];
-    avgTitikBawah = avgTitikBawah/waktuPompa;
   }
-
-  Serial.print("AVGTitikBawah");Serial.println(avgTitikBawah);
-
-  /*
+  avgTitikBawah = avgTitikBawah/(waktuPompa);
+  delay(1000);
+  
   float raw = 0;
   do {
     digitalWrite(AIRPUMP, HIGH); digitalWrite(VALVE, LOW);
@@ -177,7 +177,7 @@ void kirimTensi(long waktuPompa, long waktuTunggu) {
     Serial.print(micros());
     Serial.print(",");
     Serial.println(raw);
-  } while (raw < (avgTitikBawah+(400*8)));     //24400 24800);
+  } while (raw < (avgTitikBawah+(400*9.5)));     //24400 24800); //SET POMPA ATAS
 
 
   do {
@@ -186,8 +186,8 @@ void kirimTensi(long waktuPompa, long waktuTunggu) {
     Serial.print(micros());
     Serial.print(",");
     Serial.println(raw);
-  } while (raw > (avgTitikBawah+(400*2)));      //21500     21900
-  */
+  } while (raw > (avgTitikBawah+(400*2.1)));      //21500 21900 //SET
+  
   
   digitalWrite(AIRPUMP, LOW); digitalWrite(VALVE, LOW);
 
@@ -228,7 +228,7 @@ void setup() {
   }
 
   if (x == 2) {
-    kirimTensi(500, 3500);
+    kirimTensi(100);
     Serial.println("ENDMEASURE");
     Serial.println("ENDMEASURE");
     Serial.println("ENDMEASURE");
