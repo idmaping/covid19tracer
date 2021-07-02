@@ -52,6 +52,7 @@ class gui (QtWidgets.QDialog, Ui_Form):
         self.btn_validation.clicked.connect(self.validation)
         self.btn_predict.clicked.connect(self.predict)
         self.btn_reset.clicked.connect(self.reset_data)
+        
 
         #KNN
         self.knn = knn.knn()
@@ -637,12 +638,11 @@ class gui (QtWidgets.QDialog, Ui_Form):
                 if curr_line[0:-2]!=b'':
                     self.adstensi.append(curr_line)
                     
-            
             ## CLEAR LAST DATA
             datafile_name = 'adstensi_data.csv'
             if os.path.isfile(datafile_name):
                 os.remove(datafile_name)
-            
+
             ## PREPROCESSING DATA
             t_vec,tensi_vec = [],[]
             tensi_prev = 0.0
@@ -681,4 +681,4 @@ if __name__=='__main__':
     window = gui()
     window.setWindowTitle('POLECTOR - Poltekad Covid19 Detector')
     window.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec_()) 
