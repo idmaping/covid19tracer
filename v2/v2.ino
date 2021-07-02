@@ -139,7 +139,7 @@ void kirimSuhu(long waktuKirim) {
     Serial.print(micros());
     Serial.print(",");
     Serial.println(suhuSurface); //Serial.println(suhuBody);
-    
+
     digitalWrite(LED_R, !logicLed);
     logicLed = !logicLed;
     delay(200);
@@ -150,30 +150,22 @@ void kirimTensi(long waktuPompa, long waktuTunggu) {
   beginMeasuring();
   ads.begin();
 
-  digitalWrite(VALVE, HIGH); delay(3000); digitalWrite(VALVE, LOW);
-  //digitalWrite(AIRPUMP, HIGH); delay(waktuPompa); digitalWrite(AIRPUMP, LOW); digitalWrite(VALVE, HIGH);
-  /*
-    digitalWrite(AIRPUMP, HIGH);
-    for (long i = 0; i <= waktuPompa; i++) {
+  float rawArray[waktuPompa];
+  
+  digitalWrite(AIRPUMP, LOW); digitalWrite(VALVE, HIGH);
+  for (int i = 0; i <= waktuPompa; i++) {
     float raw = ads.readADC_SingleEnded(0);
-    double regres_raw = regress_tensi(raw);
+    rawArray[i]=ads.readADC_SingleEnded(0); 
     Serial.print(micros());
     Serial.print(",");
     Serial.println(raw);
-    }
-  */
-  
-    digitalWrite(AIRPUMP, LOW); digitalWrite(VALVE, HIGH);
-    for (long i = 0; i <= waktuPompa; i++) {
-    float raw = ads.readADC_SingleEnded(0);
-    double regres_raw = regress_tensi(raw);
-    Serial.print(micros());
-    Serial.print(",");
-    Serial.println(raw);
-    }
+  }
 
-  
-
+  float avgTitikBawah = 0;
+  for (int i=0; i<= waktuPompa; i++){
+    avgTitikBawah += rawArray[i];
+    avgTitikBawah = avgTitikBawah/waktuPompa;
+  }
 
   float raw = 0;
   do {
@@ -182,21 +174,18 @@ void kirimTensi(long waktuPompa, long waktuTunggu) {
     Serial.print(micros());
     Serial.print(",");
     Serial.println(raw);
-  } while (raw < 24600);//25000);
-  
-  
+  } while (raw < (avgTitikBawah+(400*8)));     //24400 24800);
+
+
   do {
     digitalWrite(AIRPUMP, LOW); digitalWrite(VALVE, HIGH);
     raw = ads.readADC_SingleEnded(0);
     Serial.print(micros());
     Serial.print(",");
     Serial.println(raw);
-  } while (raw > 21500);
+  } while (raw > avgTitikBawah);      //21500     21900
 
   digitalWrite(AIRPUMP, LOW); digitalWrite(VALVE, LOW);
-
-
-
 
 }
 

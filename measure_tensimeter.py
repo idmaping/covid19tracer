@@ -3,14 +3,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import signal
 from scipy.interpolate import interp1d
+from matplotlib.widgets import Slider
 
 class Tensimeter:
     def __init__(self):
-        self.titik_puncak = 170
+        self.titik_puncak = 160
+        self.oscilating_factor = 0.5
         self.data = genfromtxt('adstensi_data.csv', delimiter=',')
         self.t = self.data[:,0] 
         self.ymmHg = self.normalize(arr = self.data[:,1], #Kalibrasi Manual TODO:COBA CARI DENGAN KALIBRASI DENGAN ALAT UKUR
-                                   t_min = np.min(self.data[:,1]), #20100
+                                   #t_min = 20100, 
+                                   t_min = np.min(self.data[:,1]), 
                                    t_max = np.max(self.data[:,1]))
         #self.ymmHg = self.data[:,1]
         self.measure(self.t,self.ymmHg)
@@ -23,7 +26,7 @@ class Tensimeter:
         bLP, aLP = signal.butter(4, f5/fs*2, 'lowpass')
         yfLP = signal.lfilter(bLP, aLP, ymmHg)  
         ### 0.5 Hz HP filter
-        f05 = 0.5 # TODO: might be better to set lower ~0.3
+        f05 = self.oscilating_factor # TODO: might be better to set lower ~0.3
         bHP, aHP = signal.butter(4, f05/fs*2, 'highpass')
         yfHP = signal.lfilter(bHP, aHP, yfLP)
         yBP = yfLP - yfHP
@@ -60,7 +63,7 @@ class Tensimeter:
                 else:
                     validCnt = 0
             elif oscEndInd == 0: 
-                if oscMax[i] < (oscMax[oscStartInd]*0.5) : 
+                if oscMax[i] < (oscMax[oscStartInd]*0.45) : 
                     oscEndInd = i -1
         if oscEndInd == 0:
             oscEndInd = len(tMaximas)-4
@@ -185,6 +188,7 @@ class Tensimeter:
         axes[1].plot(self.tMaxP[self.SYSIndex],self.oscMaxP[self.SYSIndex],'X',color='red',label='10) SYSTOLIC Oscilation Point')
         axes[1].plot(self.tMaxP[self.DYSIndex],self.oscMaxP[self.DYSIndex],'X',color='blue',label='12) DIASTOLIC Oscillation Point')
         axes[1].legend(loc='upper right')
+
         plt.show()
 
 if __name__ == '__main__':
