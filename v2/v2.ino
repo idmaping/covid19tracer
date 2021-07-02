@@ -167,6 +167,9 @@ void kirimTensi(long waktuPompa, long waktuTunggu) {
     avgTitikBawah = avgTitikBawah/waktuPompa;
   }
 
+  Serial.print("AVGTitikBawah");Serial.println(avgTitikBawah);
+
+  /*
   float raw = 0;
   do {
     digitalWrite(AIRPUMP, HIGH); digitalWrite(VALVE, LOW);
@@ -183,8 +186,9 @@ void kirimTensi(long waktuPompa, long waktuTunggu) {
     Serial.print(micros());
     Serial.print(",");
     Serial.println(raw);
-  } while (raw > avgTitikBawah);      //21500     21900
-
+  } while (raw > (avgTitikBawah+(400*2)));      //21500     21900
+  */
+  
   digitalWrite(AIRPUMP, LOW); digitalWrite(VALVE, LOW);
 
 }
