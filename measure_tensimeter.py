@@ -7,8 +7,10 @@ from matplotlib.widgets import Slider
 
 class Tensimeter:
     def __init__(self):
-        self.titik_puncak = 160
-        self.oscilating_factor = 0.5
+        self.smoothing_size = 20 #PENGALUS RAW DATA
+        self.titik_puncak = 160 #MAX TENSI TERPOMPA
+        self.oscilating_factor = 0.5 #OSILASI ERROR
+        
         self.data = genfromtxt('adstensi_data.csv', delimiter=',')
         self.t = self.data[:,0] 
         self.ymmHg = self.normalize(arr = self.data[:,1], #Kalibrasi Manual TODO:COBA CARI DENGAN KALIBRASI DENGAN ALAT UKUR
@@ -24,7 +26,12 @@ class Tensimeter:
         ### 5 Hz LP filter
         f5 = 5
         bLP, aLP = signal.butter(4, f5/fs*2, 'lowpass')
-        yfLP = signal.lfilter(bLP, aLP, ymmHg)  
+        yfLP = signal.lfilter(bLP, aLP, ymmHg) 
+        yfLPnofilter = signal.lfilter(bLP, aLP, ymmHg) 
+        yfLP = np.convolve(yfLP,np.ones((self.smoothing_size,)),'same')/self.smoothing_size
+        yfLP = np.append(np.repeat(yfLP[int(self.smoothing_size/2)],int(self.smoothing_size/2)),yfLP[int(self.smoothing_size/2):-int(self.smoothing_size/2)])
+        yfLP = np.append(yfLP,np.repeat(yfLP[-int(self.smoothing_size/2)],int(self.smoothing_size/2)))
+        
         ### 0.5 Hz HP filter
         f05 = self.oscilating_factor # TODO: might be better to set lower ~0.3
         bHP, aHP = signal.butter(4, f05/fs*2, 'highpass')
@@ -141,6 +148,7 @@ class Tensimeter:
         '''
 
         ## EXPORT TO GLOBAL VARIABLE FOR PLOTTING
+        self.yfLPnoFilter = yfLPnofilter
         self.yfLP = yfLP
         self.tMaximas = tMaximas
         self.yMaximas = yMaximas
@@ -171,8 +179,12 @@ class Tensimeter:
         return norm_arr
 
     def plot(self):
+
+        self.yfLPnoFilter
+
         f, axes = plt.subplots(2)
         axes[0].plot(self.t,self.yfLP,color='black',label='1) Read Data')
+        axes[0].plot(self.t,self.yfLPnoFilter,color='red',label='1.5) Filter Data')
         axes[0].plot(self.tMaximas,self.yMaximas,'x',color='black',label='4) Peak Data')
         axes[0].plot(self.tPumpedUP,self.yPumpedUP,'o',color='darkorange',label='5) Deflating Point')
         axes[0].plot(self.tMaximas[self.oscStartInd:self.oscEndInd],self.yMaximas[self.oscStartInd:self.oscEndInd],'X',color='darkgreen',label='7) Process Data')
