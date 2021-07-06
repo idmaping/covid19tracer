@@ -30,6 +30,20 @@ class gui (QtWidgets.QDialog, Ui_Form):
     sigKeyButtonClicked = pyqtSignal(object) 
     def __init__(self):
         super().__init__()
+
+        ## BAGIAN THRESHOLD UNTUK PERSENAN DISINI
+        self.thresh_suhu = 36.9
+        self.thresh_jantung = 80
+        self.thresh_tensi_sys = 120
+        self.thresh_tensi_dys = 60
+        self.thresh_spo2 = 94
+
+        ## BAGIAN BOBOT THRESHOLD
+        self.bobot_suhu = 30 
+        self.bobot_jantung = 20
+        self.bobot_tensi = 10
+        self.bobot_spo2 = 40
+        
         self.setupUi(self)
         self.port = ""
         self.setWindowState(QtCore.Qt.WindowMaximized)
@@ -415,6 +429,35 @@ class gui (QtWidgets.QDialog, Ui_Form):
         self.buff_key = '.'
         self.input_angka()
 ###########################
+    def predict_persentase(self):
+        
+        suhu = int(self.in_suhu.text())
+        bpm = int(self.in_bpm.text())
+        spo2 = int(self.in_spo2.text())
+        sys = int(self.in_sys.text())
+        dias = int(self.in_dias.text())
+
+        ### 
+        persentase = 0
+        if suhu>=self.thresh_suhu:
+            persentase += self.bobot_suhu
+
+        if bpm>=self.thresh_jantung:
+            persentase += self.bobot_jantung
+
+        if spo2>=self.thresh_spo2:
+            persentase += self.bobot_spo2
+
+        if sys>=self.thresh_tensi_sys:
+            persentase += (self.bobot_tensi/2)
+
+        if dias>=self.thresh_tensi_dys:
+            persentase += (self.bobot_tensi/2)
+
+        return persentase
+        
+
+
 
     def predict(self):
         kelamin = self.cb_kelamin.currentText()
@@ -429,6 +472,9 @@ class gui (QtWidgets.QDialog, Ui_Form):
         spo2 = self.in_spo2.text()
         sys = self.in_sys.text()
         dias = self.in_dias.text()
+
+        #persentase = self.predict_persentase()
+        #print(persentase)
         
         #print(umur,kelamin,suhu,spo2,bpm,sys,dias)
         try:
@@ -442,6 +488,8 @@ class gui (QtWidgets.QDialog, Ui_Form):
                                                                 #diastole=dias,
                                                                 k=5)
             print(retval, result, neigh_resp, dists)
+            
+
             if result == 'N':
                 self.lbl_kategori.setText("NEGATIF")
                 self.lbl_kategori.setStyleSheet("color: yellow;")
