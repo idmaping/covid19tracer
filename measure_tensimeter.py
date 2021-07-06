@@ -8,8 +8,12 @@ from matplotlib.widgets import Slider
 class Tensimeter:
     def __init__(self):
         self.smoothing_size = 20 #PENGALUS RAW DATA
+        self.smoothing_HP = 30 #PENGALUS RAW DATA
+        
         self.titik_puncak = 160 #MAX TENSI TERPOMPA
         self.oscilating_factor = 0.5 #OSILASI ERROR
+
+        self.oscilating_distance = 0.93 #JARAK OSILASI TERBACA IJO IJO
         
         self.data = genfromtxt('adstensi_data.csv', delimiter=',')
         self.t = self.data[:,0] 
@@ -36,10 +40,14 @@ class Tensimeter:
         f05 = self.oscilating_factor # TODO: might be better to set lower ~0.3
         bHP, aHP = signal.butter(4, f05/fs*2, 'highpass')
         yfHP = signal.lfilter(bHP, aHP, yfLP)
+        yfHP = np.convolve(yfHP,np.ones((self.smoothing_HP,)),'same')/self.smoothing_HP
+        yfHP = np.append(np.repeat(yfHP[int(self.smoothing_HP/2)],int(self.smoothing_HP/2)),yfHP[int(self.smoothing_HP/2):-int(self.smoothing_HP/2)])
+        yfHP = np.append(yfHP,np.repeat(yfHP[-int(self.smoothing_HP/2)],int(self.smoothing_HP/2)))
+        
         yBP = yfLP - yfHP
 
         ## FINDING LOCAL MAXIMA
-        localMax, _ = signal.find_peaks(yfHP, prominence = 0.3 )
+        localMax, _ = signal.find_peaks(yfHP, prominence = 0.3 ) #0.3
         yMaximas = yfLP[localMax]
         tMaximas = t[localMax]
         oscMax = yfHP[localMax]
@@ -48,7 +56,7 @@ class Tensimeter:
         tPumpedUP = tMaximas[xPumpedUp]
 
         ## FINDING LOCAL MINIMA
-        localMin, _ = signal.find_peaks(-yfHP, prominence = 0.3 )
+        localMin, _ = signal.find_peaks(-yfHP, prominence = 0.3 ) #0.3
         yMinima = yfLP[localMin]
         tMinima = t[localMin]
         oscMin = yfHP[localMin]
@@ -63,7 +71,7 @@ class Tensimeter:
             deltaT[i] = tMaximas[i]-tMaximas[i-1]
             delta2T[i] = deltaT[i]-deltaT[i-1]
             if oscStartInd == 0 :
-                if np.abs(delta2T[i]) < 0.2 and i > (xPumpedUp) :
+                if np.abs(delta2T[i]) < self.oscilating_distance and i > (xPumpedUp) :
                     validCnt += 1
                     if validCnt == 5 :
                         oscStartInd = i - (validCnt-1)#) #-1)
@@ -74,6 +82,8 @@ class Tensimeter:
                     oscEndInd = i -1
         if oscEndInd == 0:
             oscEndInd = len(tMaximas)-4
+
+
         
         ## FINDING TITIK MAXIMA
         tStart = tMaximas[oscStartInd]
