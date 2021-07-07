@@ -431,28 +431,33 @@ class gui (QtWidgets.QDialog, Ui_Form):
 ###########################
     def predict_persentase(self):
         
-        suhu = int(self.in_suhu.text())
-        bpm = int(self.in_bpm.text())
-        spo2 = int(self.in_spo2.text())
-        sys = int(self.in_sys.text())
-        dias = int(self.in_dias.text())
+        suhu = float(self.in_suhu.text())
+        bpm = float(self.in_bpm.text())
+        spo2 = float(self.in_spo2.text())
+        sys = float(self.in_sys.text())
+        dias = float(self.in_dias.text())
 
         ### 
         persentase = 0
         if suhu>=self.thresh_suhu:
             persentase += self.bobot_suhu
+            print("SUHU TINGGI")
 
         if bpm>=self.thresh_jantung:
             persentase += self.bobot_jantung
+            print("JANTUNG TINGGI")
 
-        if spo2>=self.thresh_spo2:
+        if spo2<=self.thresh_spo2:
             persentase += self.bobot_spo2
+            print("SPO2 RENDAH")
 
         if sys>=self.thresh_tensi_sys:
             persentase += (self.bobot_tensi/2)
+            print("SYS TINGGI")
 
         if dias>=self.thresh_tensi_dys:
             persentase += (self.bobot_tensi/2)
+            print("DYS TINGGI")
 
         return persentase
         
@@ -473,8 +478,8 @@ class gui (QtWidgets.QDialog, Ui_Form):
         sys = self.in_sys.text()
         dias = self.in_dias.text()
 
-        #persentase = self.predict_persentase()
-        #print(persentase)
+        persentase = self.predict_persentase()
+        print("per",persentase)
         
         #print(umur,kelamin,suhu,spo2,bpm,sys,dias)
         try:

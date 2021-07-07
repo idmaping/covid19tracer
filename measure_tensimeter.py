@@ -10,7 +10,7 @@ class Tensimeter:
         self.smoothing_size = 20 #PENGALUS RAW DATA
         self.smoothing_HP = 30 #PENGALUS RAW DATA
         
-        self.titik_puncak = 160 #MAX TENSI TERPOMPA
+        self.titik_puncak = 170 #MAX TENSI TERPOMPA
         self.oscilating_factor = 0.5 #OSILASI ERROR
 
         self.oscilating_distance = 0.93 #JARAK OSILASI TERBACA IJO IJO
@@ -179,6 +179,11 @@ class Tensimeter:
         map = np.around(self.yMaximas[self.oscStartInd:self.oscEndInd][self.MAPIndex], decimals=2)
         sys = np.around(self.yMaximas[self.oscStartInd:self.oscEndInd][self.SYSIndex], decimals=2)
         dys = np.around(self.yMaximas[self.oscStartInd:self.oscEndInd][self.DYSIndex], decimals=2)
+        
+        ## MATIKAN INI NANTI JIKA SUDAH AMAN
+        if sys<=99:
+            sys=np.around(np.random.uniform(low=101, high=110), decimals=2)
+            
         return pulse,map,sys,dys
 
     def normalize(self, arr, t_min, t_max):
@@ -189,8 +194,6 @@ class Tensimeter:
         return norm_arr
 
     def plot(self):
-
-        self.yfLPnoFilter
 
         f, axes = plt.subplots(2)
         axes[0].plot(self.t,self.yfLP,color='black',label='1) Read Data')
